@@ -1,0 +1,181 @@
+---
+title: "TCGA Ext"
+author: "Britney Pheng"
+date: "`r Sys.Date()`"
+output: html_document
+---
+
+# Setup
+Extend prior GSS-studies on five TCGA datasets (COAD, READ, BRCA, LUAD, UCEC) by applying the RAVmodel on seven additional TCGA datasets (BLCA, HNSC, KICH, KIRC, KIRP, LIHC, LUSC).
+
+# Load Packages
+```{r}
+suppressPackageStartupMessages({
+  library(GenomicSuperSignature)
+  library(dplyr)
+  library(ggplot2)
+  library(magick)
+  library(wordcloud)
+  library(EnrichmentBrowser)
+})
+```
+
+# Create New TCGA Dataset
+```{r include = FALSE}
+dat_dir <- "~/Documents/GitHub/GSS/data"
+
+#Raw read counts from GSE62944 from ExperimentHub
+tcga <- GSEABenchmarkeR::loadEData("tcga", cache = FALSE, paired = FALSE, map2entrez = FALSE)
+
+## log2 transformation
+assay(tcga$BLCA) <- log2(assay(tcga$BLCA) + 1)
+assay(tcga$HNSC) <- log2(assay(tcga$HNSC) + 1)
+assay(tcga$KICH) <- log2(assay(tcga$KICH) + 1)
+assay(tcga$KIRC) <- log2(assay(tcga$KIRC) + 1)
+assay(tcga$KIRP) <- log2(assay(tcga$KIRP) + 1)
+assay(tcga$LIHC) <- log2(assay(tcga$LIHC) + 1)
+assay(tcga$LUSC) <- log2(assay(tcga$LUSC) + 1)
+
+TCGA_validationDatasets <- vector(mode = "list", length = 7)
+names(TCGA_validationDatasets) <- c("BLCA", "HNSC", "KICH", "KIRC", "KIRP", "LIHC", "LUSC")
+TCGA_validationDatasets[[1]] <- tcga$BLCA
+TCGA_validationDatasets[[2]] <- tcga$HNSC
+TCGA_validationDatasets[[3]] <- tcga$KICH
+TCGA_validationDatasets[[4]] <- tcga$KIRC
+TCGA_validationDatasets[[5]] <- tcga$KIRP
+TCGA_validationDatasets[[6]] <- tcga$LIHC
+TCGA_validationDatasets[[7]] <- tcga$LUSC
+
+save(TCGA_validationDatasets, file = file.path(dat_dir, "TCGA_validationDatasets.rda"))
+```
+
+## TCGA Datasets
+```{r}
+load("data/TCGA_validationDatasets.rda")
+names(TCGA_validationDatasets)
+datasets <- TCGA_validationDatasets[1:7]
+```
+
+## RAVmodel
+```{r}
+RAVmodel <- getModel("C2", load = TRUE)
+```
+
+# Comparison
+## heatmapTable (all)
+```{r}
+val_all <- GenomicSuperSignature::validate(datasets, RAVmodel)
+heatmapTable(val_all, RAVmodel)
+```
+```{r}
+val_blca <- validate(datasets[['BLCA']], RAVmodel)
+heatmapTable(val_blca, RAVmodel)
+```
+
+```{r}
+val_hnsc <- validate(datasets[['HNSC']], RAVmodel)
+heatmapTable(val_hnsc, RAVmodel)
+```
+
+```{r}
+val_kich <- validate(datasets[['KICH']], RAVmodel)
+heatmapTable(val_kich, RAVmodel)
+```
+
+```{r}
+val_kirc <- validate(datasets[['KIRC']], RAVmodel)
+heatmapTable(val_kirc, RAVmodel)
+```
+
+```{r}
+val_kirp <- validate(datasets[['KIRP']], RAVmodel)
+heatmapTable(val_kirp, RAVmodel)
+```
+
+```{r}
+val_lihc <- validate(datasets[['LIHC']], RAVmodel)
+heatmapTable(val_lihc, RAVmodel)
+```
+```{r}
+val_lusc <- validate(datasets[['LUSC']], RAVmodel)
+heatmapTable(val_lusc, RAVmodel)
+```
+
+## MeSH Terms and Associated Studies
+
+### BLCA (Bladder Urothelial Carcinoma)
+```{r echo = FALSE, warning = FALSE}
+ind <- 468
+findStudiesInCluster(RAVmodel, ind, studyTitle = TRUE)
+subsetEnrichedPathways(RAVmodel, ind, include_nes = TRUE) %>% as.data.frame
+drawWordcloud(RAVmodel, ind)
+```
+
+```{r echo = FALSE, warning = FALSE}
+ind <- 683
+findStudiesInCluster(RAVmodel, ind, studyTitle = TRUE)
+subsetEnrichedPathways(RAVmodel, ind, include_nes = TRUE) %>% as.data.frame
+drawWordcloud(RAVmodel, ind)
+```
+### HNSC (Head and Neck Squamous Cell Carcinoma)
+```{r echo = FALSE, warning = FALSE}
+ind <- 185
+findStudiesInCluster(RAVmodel, ind, studyTitle = TRUE)
+subsetEnrichedPathways(RAVmodel, ind, include_nes = TRUE) %>% as.data.frame
+drawWordcloud(RAVmodel, ind)
+```
+
+### KICH (Kidney Chromophobe)
+```{r echo = FALSE, warning = FALSE}
+ind <- 357
+findStudiesInCluster(RAVmodel, ind, studyTitle = TRUE)
+subsetEnrichedPathways(RAVmodel, ind, include_nes = TRUE) %>% as.data.frame
+drawWordcloud(RAVmodel, ind)
+```
+
+### KIRC (Kidney Renal Clear Cell Carcinoma)
+```{r echo = FALSE, warning = FALSE}
+ind <- 468
+findStudiesInCluster(RAVmodel, ind, studyTitle = TRUE)
+subsetEnrichedPathways(RAVmodel, ind, include_nes = TRUE) %>% as.data.frame
+drawWordcloud(RAVmodel, ind)
+```
+
+```{r echo = FALSE, warning = FALSE}
+ind <- 625
+findStudiesInCluster(RAVmodel, ind, studyTitle = TRUE)
+subsetEnrichedPathways(RAVmodel, ind, include_nes = TRUE) %>% as.data.frame
+drawWordcloud(RAVmodel, ind)
+```
+
+### KIRP (Kidney Renal Papillary Cell Carcinoma)
+```{r echo = FALSE, warning = FALSE}
+ind <- 1303
+findStudiesInCluster(RAVmodel, ind, studyTitle = TRUE)
+subsetEnrichedPathways(RAVmodel, ind, include_nes = TRUE) %>% as.data.frame
+drawWordcloud(RAVmodel, ind)
+```
+
+### LIHC (Liver Hepatocellular Carcinoma)
+```{r echo = FALSE, warning = FALSE}
+ind <- 1669
+findStudiesInCluster(RAVmodel, ind, studyTitle = TRUE)
+subsetEnrichedPathways(RAVmodel, ind, include_nes = TRUE) %>% as.data.frame
+drawWordcloud(RAVmodel, ind)
+```
+```{r echo = FALSE, warning = FALSE}
+ind <- 1166
+findStudiesInCluster(RAVmodel, ind, studyTitle = TRUE)
+subsetEnrichedPathways(RAVmodel, ind, include_nes = TRUE) %>% as.data.frame
+drawWordcloud(RAVmodel, ind)
+```
+
+### LUSC (Lung Squamous Cell Carcinoma)
+```{r echo = FALSE, warning = FALSE}
+ind <- 814
+findStudiesInCluster(RAVmodel, ind, studyTitle = TRUE)
+subsetEnrichedPathways(RAVmodel, ind, include_nes = TRUE) %>% as.data.frame
+drawWordcloud(RAVmodel, ind)
+```
+
+
