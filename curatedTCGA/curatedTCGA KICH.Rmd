@@ -1,0 +1,76 @@
+---
+title: 'curatedTCGA metadata: KICH'
+author: "Britney Pheng"
+date: "`r Sys.Date()`"
+output: html_document
+---
+Kidney Chromophobe (KICH)
+
+# Load Packages
+```{r load packages, warning=FALSE, message=FALSE}
+suppressPackageStartupMessages({
+  library(GenomicSuperSignature)
+  library(curatedTCGAData)
+  library(MultiAssayExperiment)
+  library(TCGAutils)
+  library(tidyr)
+  library(dplyr)
+  library(ggplot2)
+  library(magick)
+  library(wordcloud)
+  library(EnrichmentBrowser)
+})
+```
+
+```{r RAVmodel, echo=FALSE, warning=FALSE, message=FALSE}
+RAVmodel <- getModel("C2", load=TRUE)
+```
+
+# TCGA Datasets
+```{r load datasets}
+load("~/Documents/GitHub/GSS/data/TCGA_validationDatasets.rda")
+datasets <- TCGA_validationDatasets[1:7]
+#head(datasets)
+```
+
+# Overview
+## heatmapTable (all)
+```{r datasets heatmap table}
+## heatmapTable
+val_all <- validate(datasets, RAVmodel)
+heatmapTable(val_all, RAVmodel, scoreCutoff = 0.7)
+```
+## heatmapTable: KICH
+```{r}
+val_kich <- validate(datasets[['KICH']], RAVmodel)
+heatmapTable(val_kich, RAVmodel)
+```
+# curated TCGA Data for KICH
+
+## Select table of KICH RNA metadata
+```{r MetaData, message=FALSE}
+tcga_kich <- curatedTCGAData(diseaseCode = 'KICH', assays = "RNA*", version = "2.0.1", dry.run = FALSE)
+head(tcga_kich)
+```
+## Select for 'KICH_RNASeq2Gene-20160128' metadata with dimensions (423 x 3)
+```{r Select SummarizedExperiment assay, warning=FALSE}
+(tcga_kich_rna <- getWithColData(tcga_kich, "KICH_RNASeq2Gene-20160128", mode = "append"))
+```
+
+## heatmapTable (curatedTCGAData - KICH)
+```{r tcga, message = FALSE}
+val_tcga_rna <- validate(tcga_kich_rna, RAVmodel)
+heatmapTable(val_tcga_rna, RAVmodel)
+```
+
+Compared to the prior heatmap tables, RAV 40 now has the highest validation score and average SW. Let's view the studies and biological pathways within the RAV.
+
+## RAV 40
+```{r echo = FALSE, warning = FALSE}
+ind <- 40
+findStudiesInCluster(RAVmodel, ind, studyTitle = TRUE)
+subsetEnrichedPathways(RAVmodel, ind, include_nes = TRUE) %>% as.data.frame
+drawWordcloud(RAVmodel, ind)
+```
+
+
