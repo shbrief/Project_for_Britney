@@ -1,0 +1,183 @@
+---
+title: "EDA: TCGA_LUSC"
+author: "Sehyun Oh"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+format:
+    html:
+        fontsize: 14px
+        toc: true
+        top-depth: 2
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+```
+
+# Setup
+## Load packages
+```{r}
+suppressPackageStartupMessages({
+  library(GenomicSuperSignature)
+  library(curatedTCGAData)
+  library(MultiAssayExperiment)
+  library(TCGAutils)
+  library(tidyr)
+  library(dplyr)
+  library(ggplot2)
+  library(magick)
+  library(wordcloud)
+  library(EnrichmentBrowser)
+})
+```
+
+## Load TCGA dataset
+```{r}
+## I made this using the second chunk of code you shared.
+load("inst/extdata/TCGA_validationDatasets.rda")
+datasets <- TCGA_validationDatasets[1:7]
+```
+
+## Load RAVmodel
+```{r}
+RAVmodel <- getModel("C2", load=TRUE)
+```
+
+```{r}
+## Select LUSC RNA metadeta
+lusc <- curatedTCGAData(diseaseCode = "LUSC", 
+                        assays = "RNA*", 
+                        version = "2.0.1", 
+                        dry.run = FALSE)
+lusc_rna <- getWithColData(lusc, 
+                           "LUSC_RNASeq2Gene-20160128", 
+                           mode = "append")
+lusc_meta <- colData(lusc_rna)
+```
+
+
+# Prepare metadata for test
+**Notes**
+- The columns of `colData(lusc_rna)` are metadata attributes, not genes. 
+- We want to subset samples, so `ind <- sample(1:nrow(colData(lusc_rna)), 50)`
+- `as.matrix` coerces all the values to character. Matrix stores only a single 
+data types, so integer columns are coerced to character.
+- Before you apply `as.matrix`, the data frame contains different data types:
+numeric, integer, and character. You should separate them, which I did below, 
+because they should be handled differently - characters should be converted 
+to factors and correlation measure is between continuous & categorical 
+variables. Can you do this?
+
+## Subset
+### Filter attributes 
+Filter-out less promising attributes. This summary table shows the sparsity of 
+some attributes - for example, 268 attributes were collected for only one sample.
+```{r}
+sparsity_summary <- table(colSums(is.na(lusc_meta)))
+sparsity_summary
+```
+
+```{r echo=FALSE, eval=FALSE}
+plot(stack(sparsity_summary)$ind,
+     stack(sparsity_summary)$values)
+```
+
+I keep the attributes collected from more than 10% of the samples
+```{r}
+keep_attr_ind <- which(colSums(!is.na(lusc_meta)) >= round(nrow(lusc_meta)/10))
+meta_sub1 <- lusc_meta[keep_attr_ind] # all samples x subset of metadata
+meta_sub1 <- subset(meta_sub1, select = -patientID) # Remove ID column
+```
+
+
+### Random sampling
+```{r}
+set.seed(1)
+random_sample_ind <- sample(1:nrow(meta_sub1), 50)
+meta_sub2 <- meta_sub1[random_sample_ind,] # 100 random samples x subset of attributes
+```
+
+
+## Separate categorical variables
+```{r}
+# Get all character columns
+charcTb <- meta_sub2[, sapply(meta_sub2, class) == "character"]
+
+# Get all numeric/integer columns
+numTb <- meta_sub2[, sapply(meta_sub2, class) %in% c("numeric", "integer")]
+```
+
+
+# Calculate sample scores
+
+```{r}
+sampleScore <- calculateScore(lusc_rna, RAVmodel) # 552 samples x 4,764 RAVs
+
+## Validation index
+val_all <- validate(lusc_rna, RAVmodel)
+validated_ind <- validatedSignatures(val_all, num.out = 20, RAVmodel,
+                                     swCutoff = 0, indexOnly = TRUE)
+```
+
+```{r}
+## Subset sampleScore to join with MCPcounter
+sampleScore_sub <- sampleScore[random_sample_ind, validated_ind] %>% as.data.frame() 
+# sampleScore_sub <- tibble::rownames_to_column(sampleScore_sub)
+# colnames(sampleScore_sub) <- c("Sample", validated_ind)
+# 
+# ## Not sure why all `-` is converted to `.`. But fix it.
+# sampleScore_sub$Sample <- gsub("\\.", "-", sampleScore_sub$Sample)
+# 
+# ## Join with the selected numeric metadata
+# numTb <- tibble::rownames_to_column(as.data.frame(numTb), var = "Sample") # 50 x 522 
+# dat <- dplyr::inner_join(numTb, sampleScore_sub, by = "Sample")
+# 
+# dat[1:4, 1:4]
+```
+
+
+# Calculate r-squared
+## Numeric variables
+Check correlation between metadata and sample scores 
+```{r calculateRsq}
+calculateRsq <- function (x, y) stats::cor(x, y, use = "na.or.complete") ^ 2
+```
+
+```{r}
+## Calculate r-squared for numeric attributes
+rsq_numAttr_tb <- as.data.frame(matrix(nrow = ncol(numTb), 
+                                       ncol = ncol(sampleScore_sub)))
+colnames(rsq_numAttr_tb) <- colnames(sampleScore_sub)
+rownames(rsq_numAttr_tb) <- colnames(numTb)
+
+for (i in seq_len(ncol(numTb))) {
+    for (j in seq_len(ncol(sampleScore_sub))) {
+        rsq <- calculateRsq(numTb[,i], sampleScore_sub[,j])
+        rsq_numAttr_tb[i, j] <- rsq
+    }
+}
+
+rsq_numAttr_tb[1:4, 1:4]
+```
+
+Select the attributes which have `r-squared > 0.5` with any of the validated RAVs
+
+```{r}
+max_rav <- apply(rsq_numAttr_tb, 1, max)
+max_attr <- which(max_rav > 0.5 & max_rav < 1)
+# max_rav[max_attr]
+```
+
+```{r}
+target_rsq <- rsq_numAttr_tb[max_attr,]
+```
+
+### Heatmap table
+```{r results="asis", message=FALSE}
+library(ztable)
+library(magrittr)
+z = ztable(target_rsq) 
+z %>% makeHeatmap() %>% print()
+```
+
+
+## Categorical variables
