@@ -1,0 +1,210 @@
+---
+title: 'EDA HNSC'
+author: "Sehyun Oh, Britney Pheng"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+format:
+    html:
+        fontsize: 14pxs
+        toc: true
+        top-depth: 3
+output: html_document
+---
+
+# Set up
+## Load Packages
+```{r warning=FALSE, message=FALSE}
+suppressPackageStartupMessages({
+  library(GenomicSuperSignature)
+  library(curatedTCGAData)
+  library(MultiAssayExperiment)
+  library(TCGAutils)
+  library(tidyr)
+  library(dplyr)
+  library(ggplot2)
+  library(magick)
+  library(wordcloud)
+  library(EnrichmentBrowser)
+})
+```
+
+## Load TCGA dataset
+```{r}
+load("~/Documents/GitHub/GSS/data/TCGA_validationDatasets.rda")
+datasets <- TCGA_validationDatasets[1:7]
+```
+
+## Load RAVmodel
+```{r warning=FALSE, message=FALSE}
+RAVmodel <- getModel("C2", load=TRUE)
+```
+
+## Select HNSC RNA metadata
+```{r message=FALSE, warning=FALSE}
+hnsc <- curatedTCGAData(diseaseCode = "HNSC", 
+                        assays = "RNA*", 
+                        version = "2.0.1", 
+                        dry.run = FALSE)
+
+hnsc_rna <- getWithColData(hnsc, 
+                           "HNSC_RNASeq2Gene-20160128", 
+                           mode = "append")
+
+hnsc_meta <- colData(hnsc_rna)
+```
+
+# heatmapTable: HNSC
+```{r message=FALSE}
+val_hnsc <- validate(datasets$HNSC, RAVmodel)
+heatmapTable(val_hnsc, RAVmodel)
+```
+# Subset
+
+## Filter attributes
+```{r}
+sparsity_summary <- table(colSums(is.na(hnsc_meta)))
+sparsity_summary
+```
+## Sparsity Plot
+```{r echo=FALSE}
+plot(stack(sparsity_summary)$ind, 
+     stack(sparsity_summary)$values)
+```
+
+```{r}
+# Only select for columns with more than 10% completeness
+keep_attr_ind <- which(colSums(!is.na(hnsc_meta)) > round(nrow(hnsc_meta)/10))
+meta_sub1 <- hnsc_meta[keep_attr_ind]
+meta_sub1 <- subset(meta_sub1, select = -patientID)
+```
+
+```{r}
+# Randomly select for 100 rows
+set.seed(1)
+random_sample_ind <- sample(1:nrow(meta_sub1), 100)
+meta_sub2 <- meta_sub1[random_sample_ind,]
+```
+
+
+```{r}
+# Check for data types in listData
+unique(sapply(hnsc_meta@listData, type))
+
+charcTb <- meta_sub2[, sapply(meta_sub2, class) == 'character']
+numTb <- meta_sub2[, sapply(meta_sub2, class) %in% c('numeric', 'integer')]
+```
+
+```{r}
+# Calculate validation scores
+sampleScore <- calculateScore(hnsc_rna, RAVmodel)
+```
+
+```{r}
+# Select for 30 RAVs
+val_all <- validate(hnsc_rna, RAVmodel)
+validated_ind <- validatedSignatures(val_all, num.out = 30, RAVmodel,
+                                     swCutoff = 0, indexOnly = TRUE)
+validated_ind
+```
+
+```{r}
+# Subset sampleScore to join with MCPcounter
+sampleScore_sub <- sampleScore[random_sample_ind, validated_ind] %>% as.data.frame() 
+```
+
+# Calculate r-squared value
+## Numeric variables
+```{r calculateRsq}
+# R squared value function
+calculateRsq <- function (x, y) stats::cor(x, y, use = "na.or.complete") ^ 2
+```
+
+```{r warning=FALSE}
+## Calculate r-squared for numeric attributes
+rsq_numAttr_tb <- as.data.frame(matrix(nrow = ncol(numTb), 
+                                       ncol = ncol(sampleScore_sub)))
+
+colnames(rsq_numAttr_tb) <- colnames(sampleScore_sub)
+rownames(rsq_numAttr_tb) <- colnames(numTb)
+
+for (i in seq_len(ncol(numTb))) {
+    for (j in seq_len(ncol(sampleScore_sub))) {
+        rsq <- calculateRsq(numTb[,i], sampleScore_sub[,j])
+        rsq_numAttr_tb[i, j] <- rsq
+    }
+}
+```
+
+```{r}
+dim(rsq_numAttr_tb) # 330 features x 30 RAVs
+# rsq_numAttr_tb[1:10, 1:20]
+max_rav <- apply(rsq_numAttr_tb, 1, max)
+max_attr <- which(max_rav > 0.4 & max_rav < 1) # Decreased the lower limit
+max_rav[max_attr]
+```
+## Features with an r squared value > 0.2
+```{r}
+target_rsq <- rsq_numAttr_tb[max_attr,]
+```
+
+# heatmapTable
+```{r results='asis'}
+library(ztable)
+library(magrittr)
+options(ztable.type="html")
+z = ztable(target_rsq)
+z %>% makeHeatmap()
+```
+
+## Character variables
+
+```{r}
+# Convert variables to factor data type and then numeric
+factorTb <- meta_sub2[, sapply(meta_sub2, class) == 'character']
+
+factorTb[sapply(factorTb, is.character)] <- lapply(factorTb[sapply(factorTb, is.character)], as.factor)
+
+factorTb[sapply(factorTb, is.factor)] <- lapply(factorTb[sapply(factorTb, is.factor)], as.numeric)
+```
+
+
+```{r warning=FALSE}
+# Calculate r-squared for character attributes
+rsq_factorAttr_tb <- as.data.frame(matrix(nrow = ncol(factorTb), 
+                                       ncol = ncol(sampleScore_sub)))
+
+colnames(rsq_factorAttr_tb) <- colnames(sampleScore_sub)
+rownames(rsq_factorAttr_tb) <- colnames(factorTb)
+
+for (i in seq_len(ncol(factorTb))) {
+    for (j in seq_len(ncol(sampleScore_sub))) {
+        rsq <- calculateRsq(factorTb[,i], sampleScore_sub[,j])
+        rsq_factorAttr_tb[i, j] <- rsq
+    }
+}
+```
+
+```{r}
+#rsq_factorAttr_tb[1:4, 1:4]
+max_rav_2 <- apply(rsq_factorAttr_tb, 1, max)
+max_attr_2 <- which(max_rav_2 > 0.4 & max_rav_2 < 1)
+max_rav[max_attr]
+```
+## Features with an r squared value > 0.4
+```{r}
+target_rsq_2 <- rsq_factorAttr_tb[max_attr_2,]
+```
+
+# heatmapTable
+```{r results='asis'}
+options(ztable.type="html")
+z = ztable(target_rsq_2)
+z %>% makeHeatmap()
+```
+
+```{r}
+ind <- 4488
+findStudiesInCluster(RAVmodel, ind, studyTitle = TRUE)
+subsetEnrichedPathways(RAVmodel, ind, include_nes = TRUE) %>% as.data.frame
+drawWordcloud(RAVmodel, ind)
+```
+

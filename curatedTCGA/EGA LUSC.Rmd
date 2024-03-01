@@ -1,0 +1,168 @@
+---
+title: 'curatedTCGA metadata: LUSC'
+author: "Britney Pheng"
+date: "`r Sys.Date()`"
+output: html_document
+---
+# Load Packages
+```{r load packages, warning=FALSE, message=FALSE}
+suppressPackageStartupMessages({
+  library(GenomicSuperSignature)
+  library(curatedTCGAData)
+  library(MultiAssayExperiment)
+  library(TCGAutils)
+  library(tidyr)
+  library(dplyr)
+  library(ggplot2)
+  library(magick)
+  library(wordcloud)
+  library(EnrichmentBrowser)
+})
+```
+
+```{r RAVmodel, echo=FALSE, warning=FALSE, message=FALSE}
+RAVmodel <- getModel("C2", load=TRUE)
+```
+
+# TCGA Datasets
+```{r load datasets}
+load("~/Documents/GitHub/GSS/data/TCGA_validationDatasets.rda")
+datasets <- TCGA_validationDatasets[1:7]
+#head(datasets)
+```
+
+# Overview
+## heatmapTable (all)
+```{r datasets heatmap table}
+## heatmapTable
+val_all <- validate(datasets, RAVmodel)
+heatmapTable(val_all, RAVmodel, scoreCutoff = 0.7)
+```
+## heatmapTable: LUSC
+```{r}
+val_lusc <- validate(datasets[['LUSC']], RAVmodel)
+heatmapTable(val_lusc, RAVmodel)
+```
+# curated TCGA Data for LUSC
+
+## Select LUSC RNA metadata
+```{r}
+lusc <- curatedTCGAData(diseaseCode = "LUSC", assays = "RNA*", version = "2.0.1", dry.run = FALSE)
+lusc_rna <- getWithColData(lusc, "LUSC_RNASeq2Gene-20160128", mode = "append")
+lusc_meta <- colData(lusc_rna)
+```
+```{r}
+sparsity_summary <- table(colSums(is.na(lusc_meta)))
+sparsity_summary
+```
+```{r}
+plot(stack(sparsity_summary)$ind, stack(sparsity_summary)$values)
+```
+```{r}
+keep_attr_ind <- which(colSums(!is.na(lusc_meta)) > round(nrow(lusc_meta)/10))
+meta_sub1 <- lusc_meta[keep_attr_ind]
+meta_sub1 <- subset(meta_sub1, select = -patientID)
+```
+
+```{r}
+set.seed(1)
+random_sample_ind <- sample(1:nrow(meta_sub1), 100)
+meta_sub2 <- meta_sub1[random_sample_ind,]
+```
+
+```{r}
+charcTb <- meta_sub2[, sapply(meta_sub2, class) == 'character']
+numTb <- meta_sub2[, sapply(meta_sub2, class) %in% c('numeric', 'integer')]
+```
+
+```{r}
+sampleScore <- calculateScore(lusc_rna, RAVmodel)
+```
+
+```{r}
+val_all <- validate(lusc_rna, RAVmodel)
+validated_ind <- validatedSignatures(val_all, num.out = 20, RAVmodel,
+                                     swCutoff = 0, indexOnly = TRUE)
+```
+```{r}
+## Subset sampleScore to join with MCPcounter
+sampleScore_sub <- sampleScore[random_sample_ind, validated_ind] %>% as.data.frame() 
+```
+
+# Calculate r-squared
+## Numeric variables
+Check correlation between metadata and sample scores 
+```{r calculateRsq}
+calculateRsq <- function (x, y) stats::cor(x, y, use = "na.or.complete") ^ 2
+```
+
+
+```{r}
+## Calculate r-squared for numeric attributes
+rsq_numAttr_tb <- as.data.frame(matrix(nrow = ncol(numTb), 
+                                       ncol = ncol(sampleScore_sub)))
+colnames(rsq_numAttr_tb) <- colnames(sampleScore_sub)
+rownames(rsq_numAttr_tb) <- colnames(numTb)
+
+for (i in seq_len(ncol(numTb))) {
+    for (j in seq_len(ncol(sampleScore_sub))) {
+        rsq <- calculateRsq(numTb[,i], sampleScore_sub[,j])
+        rsq_numAttr_tb[i, j] <- rsq
+    }
+}
+
+rsq_numAttr_tb[1:4, 1:4]
+```
+```{r}
+max_rav <- apply(rsq_numAttr_tb, 1, max)
+max_attr <- which(max_rav > 0.5 & max_rav < 1)
+# max_rav[max_attr]
+```
+
+```{r}
+target_rsq <- rsq_numAttr_tb[max_attr,]
+```
+
+
+## heatmapTable (curatedTCGAData - LUSC)
+```{r}
+library(ztable)
+library(magrittr)
+
+#z = ztable(target_rsq) 
+```
+
+### Character Attributes
+```{r}
+## Calculate r-squared for character attributes
+factorTb <- meta_sub2[, sapply(meta_sub2, class) == 'character']
+
+factorTb[sapply(factorTb, is.character)] <- lapply(factorTb[sapply(factorTb, is.character)], as.factor)
+factorTb[sapply(factorTb, is.factor)] <- lapply(factorTb[sapply(factorTb, is.factor)], as.numeric)
+
+rsq_factorAttr_tb <- as.data.frame(matrix(nrow = ncol(factorTb), 
+                                       ncol = ncol(sampleScore_sub)))
+
+colnames(rsq_factorAttr_tb) <- colnames(sampleScore_sub)
+rownames(rsq_factorAttr_tb) <- colnames(factorTb)
+
+for (i in seq_len(ncol(factorTb))) {
+    for (j in seq_len(ncol(sampleScore_sub))) {
+        rsq <- calculateRsq(factorTb[,i], sampleScore_sub[,j])
+        rsq_factorAttr_tb[i, j] <- rsq
+    }
+}
+
+rsq_factorAttr_tb[1:4, 1:4]
+```
+```{r}
+max_rav_2 <- apply(rsq_factorAttr_tb, 1, max)
+max_attr_2 <- which(max_rav_2 > 0.5 & max_rav_2 < 1)
+# max_rav[max_attr]
+```
+
+```{r}
+target_rsq_2 <- rsq_factorAttr_tb[max_attr_2,]
+```
+
+

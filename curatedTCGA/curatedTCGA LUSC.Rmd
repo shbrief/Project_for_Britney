@@ -48,12 +48,29 @@ heatmapTable(val_lusc, RAVmodel)
 ## Select table of LUSC RNA metadata
 ```{r MetaData, message=FALSE}
 tcga_lusc <- curatedTCGAData(diseaseCode = 'LUSC', assays = "RNA*", version = "2.0.1", dry.run = FALSE)
-head(tcga_lusc)
 ```
 ## Select for 'LUSC_RNASeq2Gene-20160128' metadata with dimensions (423 x 3)
 ```{r Select SummarizedExperiment assay, warning=FALSE}
 (tcga_lusc_rna <- getWithColData(tcga_lusc, "LUSC_RNASeq2Gene-20160128", mode = "append"))
 ```
+
+```{r}
+## use colData()
+length(colnames(colData(tcga_lusc_rna))) #2258 gene columns
+
+ind <- sample(1:2258, 50)
+test_dat <- colData(tcga_lusc_rna)[ind] %>% as.matrix
+calculateScore(test_dat, RAVmodel)
+
+## no colData()
+sampleScore <- calculateScore(tcga_lusc_rna, RAVmodel)
+
+val_all <- validate(tcga_lusc_rna, RAVmodel)
+validated_ind <- validatedSignatures(val_all, num.out = 10, RAVmodel,
+                                     swCutoff = 0, indexOnly = TRUE)
+validated_ind
+```
+
 
 ## heatmapTable (curatedTCGAData - LUSC)
 ```{r tcga, message = FALSE}
