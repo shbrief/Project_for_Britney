@@ -11,7 +11,7 @@
 
 <meta name="author" content="Sehyun Oh, Britney Pheng" />
 
-<meta name="date" content="2024-02-29" />
+<meta name="date" content="2024-03-01" />
 
 <title>EDA BLCA</title>
 
@@ -352,7 +352,7 @@ display: none;
 
 <h1 class="title toc-ignore">EDA BLCA</h1>
 <h4 class="author">Sehyun Oh, Britney Pheng</h4>
-<h4 class="date">February 29, 2024</h4>
+<h4 class="date">March 01, 2024</h4>
 
 </div>
 
@@ -382,6 +382,7 @@ datasets &lt;- TCGA_validationDatasets[1:7]</code></pre>
 <div id="load-ravmodel" class="section level2">
 <h2>Load RAVmodel</h2>
 <pre class="r"><code>RAVmodel &lt;- getModel(&quot;C2&quot;, load=TRUE)</code></pre>
+<pre><code>## [1] &quot;downloading&quot;</code></pre>
 </div>
 <div id="select-blca-rna-metadata" class="section level2">
 <h2>Select BLCA RNA metadata</h2>
@@ -436,7 +437,8 @@ meta_sub1 &lt;- blca_meta[keep_attr_ind]
 meta_sub1 &lt;- subset(meta_sub1, select = -patientID)</code></pre>
 <pre class="r"><code># Randomly select for 100 rows
 set.seed(1)
-random_sample_ind &lt;- sample(1:nrow(meta_sub1), 100)
+#random_sample_ind &lt;- sample(1:nrow(meta_sub1), 100)
+random_sample_ind &lt;- c(1:427)
 meta_sub2 &lt;- meta_sub1[random_sample_ind,]</code></pre>
 <pre class="r"><code># Check for data types in listData
 unique(sapply(blca_meta@listData, type))</code></pre>
@@ -495,32 +497,16 @@ for (i in seq_len(ncol(numTb))) {
 max_rav &lt;- apply(rsq_numAttr_tb, 1, max)
 max_attr &lt;- which(max_rav &gt; 0.2 &amp; max_rav &lt; 1) # Decreased the lower limit
 max_rav[max_attr]</code></pre>
-<pre><code>##                                                                 patient.drugs.drug.2.month_of_form_completion 
-##                                                                                                     0.2286557 
-##                                                         patient.follow_ups.follow_up.2.day_of_form_completion 
-##                                                                                                     0.3391459 
-##                                                          patient.follow_ups.follow_up.2.days_to_last_followup 
-##                                                                                                     0.3656916 
-##                                                       patient.follow_ups.follow_up.2.month_of_form_completion 
-##                                                                                                     0.2990213 
-##                                                        patient.follow_ups.follow_up.2.year_of_form_completion 
-##                                                                                                     0.4910876 
-## patient.follow_ups.follow_up.new_tumor_events.new_tumor_event.days_to_new_tumor_event_after_initial_treatment 
-##                                                                                                     0.2328003 
-##                   patient.biospecimen_cqcf.normal_controls.normal_control.2.days_to_normal_sample_procurement 
-##                                                                                                     0.2278698 
-##                          patient.biospecimen_cqcf.normal_controls.normal_control.extracted_dna.ncedna_dna_vol 
-##                                                                                                     0.2836140 
-##                    patient.samples.sample.2.portions.portion.analytes.analyte.aliquots.aliquot.3.plate_column 
-##                                                                                                     0.2761648 
-##        patient.samples.sample.portions.portion.analytes.analyte.3.aliquots.aliquot.biospecimen_barcode_bottom 
-##                                                                                                     0.2059070 
-##                      patient.samples.sample.portions.portion.analytes.analyte.aliquots.aliquot.4.plate_column 
-##                                                                                                     0.3650347 
-##                             patient.samples.sample.portions.shipment_portion.shipment_portion_day_of_shipment 
-##                                                                                                     0.2000511 
-##                            patient.samples.sample.portions.shipment_portion.shipment_portion_year_of_shipment 
-##                                                                                                     0.2171369</code></pre>
+<pre><code>## patient.samples.sample.2.portions.portion.analytes.analyte.2.aliquots.aliquot.plate_column 
+##                                                                                  0.2198114 
+## patient.samples.sample.2.portions.portion.analytes.analyte.aliquots.aliquot.3.plate_column 
+##                                                                                  0.2077534 
+##   patient.samples.sample.portions.portion.analytes.analyte.aliquots.aliquot.4.plate_column 
+##                                                                                  0.2469980 
+##          patient.samples.sample.portions.shipment_portion.shipment_portion_day_of_shipment 
+##                                                                                  0.2102858 
+##         patient.samples.sample.portions.shipment_portion.shipment_portion_year_of_shipment 
+##                                                                                  0.2246803</code></pre>
 </div>
 <div id="features-with-an-r-squared-value-0.2" class="section level2">
 <h2>Features with an r squared value &gt; 0.2</h2>
@@ -596,952 +582,192 @@ padding: 1px 1px 5px 5px; }
 </tr>
 <tr>
 <td style="border-left: 0px solid black; ">
-patient.drugs.drug.2.month_of_form_completion
+patient.samples.sample.2.portions.portion.analytes.analyte.2.aliquots.aliquot.plate_column
 </td>
 <td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
 0.00
 </td>
-<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.00
+<td align="right" style="border-left: 0px solid black;background-color: #CB181D;color: #FFFFFF;">
+0.20
 </td>
 <td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
 0.01
 </td>
-<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.00
+<td align="right" style="border-left: 0px solid black;background-color: #A50F15;color: #FFFFFF;">
+0.20
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #CB181D;color: #FFFFFF;">
+0.20
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #A50F15;color: #FFFFFF;">
+0.20
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #FB6A4A;color: #FFFFFF;">
+0.11
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #EF3B2C;color: #FFFFFF;">
+0.16
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #CB181D;color: #FFFFFF;">
+0.18
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #A50F15;color: #FFFFFF;">
+0.21
 </td>
 <td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
 0.00
 </td>
-<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.00
+<td align="right" style="border-left: 0px solid black;background-color: #EF3B2C;color: #FFFFFF;">
+0.16
 </td>
-<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.00
+<td align="right" style="border-left: 0px solid black;background-color: #CB181D;color: #FFFFFF;">
+0.17
 </td>
-<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.00
+<td align="right" style="border-left: 0px solid black;background-color: #FB6A4A;color: #FFFFFF;">
+0.13
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #A50F15;color: #FFFFFF;">
+0.21
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #CB181D;color: #FFFFFF;">
+0.19
 </td>
 <td align="right" style="border-left: 0px solid black;background-color: #FEE0D2;">
-0.05
+0.03
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #CB181D;color: #FFFFFF;">
+0.19
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #FC9272;">
+0.09
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #EF3B2C;color: #FFFFFF;">
+0.16
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #A50F15;color: #FFFFFF;">
+0.21
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #CB181D;color: #FFFFFF;">
+0.19
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #A50F15;color: #FFFFFF;">
+0.22
 </td>
 <td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
 0.00
 </td>
-<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FEE0D2;">
-0.06
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.00
+<td align="right" style="border-left: 0px solid black;background-color: #CB181D;color: #FFFFFF;">
+0.19
 </td>
 <td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
 0.01
 </td>
 <td align="right" style="border-left: 0px solid black;background-color: #FB6A4A;color: #FFFFFF;">
-0.23
+0.13
 </td>
-<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.00
+<td align="right" style="border-left: 0px solid black;background-color: #A50F15;color: #FFFFFF;">
+0.22
 </td>
-<td align="right" style="border-left: 0px solid black;background-color: #FEE0D2;">
-0.06
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;background-color: #FFF5F0;">
-0.01
-</td>
-</tr>
-<tr>
-<td style="border-left: 0px solid black; border-top: hidden;">
-patient.follow_ups.follow_up.2.day_of_form_completion
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.31
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.34
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.06
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+<td align="right" style="border-left: 0px solid black;background-color: #FC9272;">
 0.09
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.06
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.06
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.19
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.30
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.14
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.15
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.17
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.16
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.05
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.12
-</td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-</tr>
-<tr>
-<td style="border-left: 0px solid black; border-top: hidden;">
-patient.follow_ups.follow_up.2.days_to_last_followup
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.08
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.07
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.05
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.07
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.05
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.05
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.05
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.05
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.36
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.37
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.05
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-</tr>
-<tr>
-<td style="border-left: 0px solid black; border-top: hidden;">
-patient.follow_ups.follow_up.2.month_of_form_completion
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
+<td align="right" style="border-left: 0px solid black;border-right:0px solid black;background-color: #A50F15;color: #FFFFFF;">
 0.22
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.22
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.22
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.24
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.30
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.22
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.16
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.24
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.13
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.21
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.16
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.30
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.19
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.18
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.19
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.21
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.22
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.21
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.26
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.24
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.20
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.12
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.19
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.23
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.23
-</td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #FC9272;">
-0.18
-</td>
-</tr>
-<tr>
-<td style="border-left: 0px solid black; border-top: hidden;">
-patient.follow_ups.follow_up.2.year_of_form_completion
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.28
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
-0.48
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.17
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
-0.43
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.39
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
-0.48
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
-0.43
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
-0.41
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.37
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
-0.45
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.35
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.29
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
-0.49
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.40
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.35
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.33
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.34
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.06
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
-0.41
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.34
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
-0.40
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.35
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
-0.45
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.35
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.30
-</td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.33
-</td>
-</tr>
-<tr>
-<td style="border-left: 0px solid black; border-top: hidden;">
-patient.follow_ups.follow_up.new_tumor_events.new_tumor_event.days_to_new_tumor_event_after_initial_treatment
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.06
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.23
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.14
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-</tr>
-<tr>
-<td style="border-left: 0px solid black; border-top: hidden;">
-patient.biospecimen_cqcf.normal_controls.normal_control.2.days_to_normal_sample_procurement
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.11
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.16
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.16
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.14
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.09
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.13
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.15
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.13
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.18
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.17
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.17
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.19
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.23
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.17
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.18
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.18
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.18
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.17
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #FC9272;">
-0.18
-</td>
-</tr>
-<tr>
-<td style="border-left: 0px solid black; border-top: hidden;">
-patient.biospecimen_cqcf.normal_controls.normal_control.extracted_dna.ncedna_dna_vol
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.07
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.26
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.08
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.25
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.25
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.28
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.27
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.25
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.25
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.25
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.12
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.28
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.24
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.26
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.25
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.24
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.16
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.24
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.22
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.14
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.27
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.25
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.27
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.25
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.16
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.25
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.25
-</td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.23
 </td>
 </tr>
 <tr>
 <td style="border-left: 0px solid black; border-top: hidden;">
 patient.samples.sample.2.portions.portion.analytes.analyte.aliquots.aliquot.3.plate_column
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
+0.01
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.22
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.07
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.24
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.25
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.21
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.27
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.26
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.24
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.23
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
+0.20
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.08
+0.03
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.28
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
+0.20
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.22
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
+0.20
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.25
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
+0.20
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.23
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.26
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
 0.15
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.24
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
+0.19
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.26
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
+0.19
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.05
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.21
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.26
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
 0.20
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.26
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.16
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.20
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.22
-</td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #FC9272;">
-0.21
-</td>
-</tr>
-<tr>
-<td style="border-left: 0px solid black; border-top: hidden;">
-patient.samples.sample.portions.portion.analytes.analyte.3.aliquots.aliquot.biospecimen_barcode_bottom
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.13
-</td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
+0.02
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.12
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
+0.18
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.11
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
+0.18
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.13
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.08
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.06
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.08
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.12
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.08
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.07
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.05
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.12
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.08
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.12
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.11
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.21
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.13
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.09
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.13
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.09
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.08
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
 0.14
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
+0.21
 </td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #FC9272;">
-0.16
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
+0.20
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+0.05
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
+0.19
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
+0.18
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
+0.09
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
+0.21
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
+0.19
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
+0.20
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
+0.01
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
+0.20
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
+0.01
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
+0.11
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
+0.20
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
+0.12
+</td>
+<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
+0.20
 </td>
 </tr>
 <tr>
@@ -1549,94 +775,94 @@ patient.samples.sample.portions.portion.analytes.analyte.3.aliquots.aliquot.bios
 patient.samples.sample.portions.portion.analytes.analyte.aliquots.aliquot.4.plate_column
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
+0.02
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.25
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
+0.22
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.09
+0.05
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.30
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
+0.23
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.32
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.26
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
 0.24
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.31
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
+0.23
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.29
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
+0.19
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.28
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
+0.21
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
+0.21
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
+0.23
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.08
+0.04
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
+0.21
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.35
+0.20
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.28
+0.15
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.26
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
+0.24
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.31
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.34
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
+0.23
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.18
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.32
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.31
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
 0.08
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.28
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
+0.23
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.36
+0.17
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.29
+0.15
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
+0.24
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.37
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
+0.24
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
+0.24
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
 0.00
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.13
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
+0.24
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.30
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
+0.01
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.30
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
+0.12
 </td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.29
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
+0.24
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
+0.12
+</td>
+<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
+0.25
 </td>
 </tr>
 <tr>
@@ -1644,93 +870,93 @@ patient.samples.sample.portions.portion.analytes.analyte.aliquots.aliquot.4.plat
 patient.samples.sample.portions.shipment_portion.shipment_portion_day_of_shipment
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
+0.00
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
+0.11
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
+0.01
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
 0.10
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
+0.09
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
+0.11
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
 0.05
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.10
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.09
+0.05
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+0.07
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
 0.11
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
+0.00
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+0.05
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
 0.06
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
 0.04
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.06
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
 0.10
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.06
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.05
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.03
-</td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.10
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
 0.07
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.09
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.09
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
+0.02
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.20
+0.09
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
+0.00
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
+0.21
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
+0.12
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.11
+0.07
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.08
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
 0.11
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
 0.00
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.08
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+0.07
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
 0.00
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.06
-</td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+0.08
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
 0.12
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
 0.00
 </td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #FCBBA1;">
+<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
 0.14
 </td>
 </tr>
@@ -1739,93 +965,93 @@ patient.samples.sample.portions.shipment_portion.shipment_portion_day_of_shipmen
 patient.samples.sample.portions.shipment_portion.shipment_portion_year_of_shipment
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
+0.00
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
 0.11
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.11
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.10
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.12
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.06
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.05
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.07
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.12
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
 0.01
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.07
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.06
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
 0.11
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.08
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
+0.10
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.08
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
+0.12
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+0.05
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+0.05
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+0.08
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
 0.11
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
 0.00
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.22
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+0.06
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.12
+0.06
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.09
+0.04
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
+0.11
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+0.08
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
+0.02
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
+0.10
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
+0.00
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
+0.22
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
+0.12
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
+0.08
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
+0.12
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
+0.00
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
+0.08
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
+0.00
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+0.08
+</td>
+<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
 0.13
 </td>
 <td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
 0.00
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.09
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.06
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.14
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #FC9272;">
+<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
 0.16
 </td>
 </tr>
@@ -1857,34 +1083,10 @@ for (i in seq_len(ncol(factorTb))) {
 }</code></pre>
 <pre class="r"><code>#rsq_factorAttr_tb[1:4, 1:4]
 max_rav_2 &lt;- apply(rsq_factorAttr_tb, 1, max)
-max_attr_2 &lt;- which(max_rav_2 &gt; 0.4 &amp; max_rav_2 &lt; 1)
-max_rav[max_attr]</code></pre>
-<pre><code>##                                                                 patient.drugs.drug.2.month_of_form_completion 
-##                                                                                                     0.2286557 
-##                                                         patient.follow_ups.follow_up.2.day_of_form_completion 
-##                                                                                                     0.3391459 
-##                                                          patient.follow_ups.follow_up.2.days_to_last_followup 
-##                                                                                                     0.3656916 
-##                                                       patient.follow_ups.follow_up.2.month_of_form_completion 
-##                                                                                                     0.2990213 
-##                                                        patient.follow_ups.follow_up.2.year_of_form_completion 
-##                                                                                                     0.4910876 
-## patient.follow_ups.follow_up.new_tumor_events.new_tumor_event.days_to_new_tumor_event_after_initial_treatment 
-##                                                                                                     0.2328003 
-##                   patient.biospecimen_cqcf.normal_controls.normal_control.2.days_to_normal_sample_procurement 
-##                                                                                                     0.2278698 
-##                          patient.biospecimen_cqcf.normal_controls.normal_control.extracted_dna.ncedna_dna_vol 
-##                                                                                                     0.2836140 
-##                    patient.samples.sample.2.portions.portion.analytes.analyte.aliquots.aliquot.3.plate_column 
-##                                                                                                     0.2761648 
-##        patient.samples.sample.portions.portion.analytes.analyte.3.aliquots.aliquot.biospecimen_barcode_bottom 
-##                                                                                                     0.2059070 
-##                      patient.samples.sample.portions.portion.analytes.analyte.aliquots.aliquot.4.plate_column 
-##                                                                                                     0.3650347 
-##                             patient.samples.sample.portions.shipment_portion.shipment_portion_day_of_shipment 
-##                                                                                                     0.2000511 
-##                            patient.samples.sample.portions.shipment_portion.shipment_portion_year_of_shipment 
-##                                                                                                     0.2171369</code></pre>
+max_attr_2 &lt;- which(max_rav_2 &gt; 0.2 &amp; max_rav_2 &lt; 1)
+max_rav_2[max_attr_2]</code></pre>
+<pre><code>## PrimaryTreatmentSuccess 
+##               0.2238091</code></pre>
 </div>
 <div id="features-with-an-r-squared-value-0.4" class="section level2">
 <h2>Features with an r squared value &gt; 0.4</h2>
@@ -1949,667 +1151,97 @@ padding: 1px 1px 5px 5px; }
 </tr>
 <tr>
 <td style="border-left: 0px solid black; ">
-patient.follow_ups.follow_up.2.primary_therapy_outcome_success
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FC9272;">
-0.24
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FB6A4A;color: #FFFFFF;">
-0.24
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FC9272;">
-0.17
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FC9272;">
-0.24
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FB6A4A;color: #FFFFFF;">
-0.27
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FC9272;">
-0.18
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FC9272;">
-0.19
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #EF3B2C;color: #FFFFFF;">
-0.34
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #EF3B2C;color: #FFFFFF;">
-0.34
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FC9272;">
-0.22
+PrimaryTreatmentSuccess
 </td>
 <td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FC9272;">
-0.22
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #CB181D;color: #FFFFFF;">
-0.41
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FB6A4A;color: #FFFFFF;">
-0.26
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FC9272;">
-0.21
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FB6A4A;color: #FFFFFF;">
-0.28
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #EF3B2C;color: #FFFFFF;">
-0.31
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FB6A4A;color: #FFFFFF;">
-0.27
+0.00
 </td>
 <td align="right" style="border-left: 0px solid black;background-color: #A50F15;color: #FFFFFF;">
-0.46
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FEE0D2;">
-0.10
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FCBBA1;">
-0.16
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FB6A4A;color: #FFFFFF;">
-0.25
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FCBBA1;">
-0.15
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FEE0D2;">
-0.09
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FB6A4A;color: #FFFFFF;">
-0.26
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FCBBA1;">
-0.11
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #EF3B2C;color: #FFFFFF;">
-0.31
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #FCBBA1;">
-0.12
-</td>
-<td align="right" style="border-left: 0px solid black;background-color: #CB181D;color: #FFFFFF;">
-0.38
-</td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;background-color: #FEE0D2;">
-0.07
-</td>
-</tr>
-<tr>
-<td style="border-left: 0px solid black; border-top: hidden;">
-patient.follow_ups.follow_up.new_tumor_events.new_tumor_event.additional_pharmaceutical_therapy
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.17
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.30
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.10
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.27
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.26
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.28
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.21
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.30
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.28
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.27
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.08
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.28
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.26
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.40
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.25
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.26
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.24
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.32
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.07
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.26
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.24
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.23
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.24
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.26
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.23
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.34
-</td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #FC9272;">
-0.21
-</td>
-</tr>
-<tr>
-<td style="border-left: 0px solid black; border-top: hidden;">
-patient.follow_ups.follow_up.new_tumor_events.new_tumor_event.new_tumor_event_additional_surgery_procedure
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.06
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.07
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.06
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.05
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.05
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.07
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.06
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.05
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.06
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.15
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.40
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.06
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.05
-</td>
-</tr>
-<tr>
-<td style="border-left: 0px solid black; border-top: hidden;">
-patient.bcr_canonical_check.bcr_patient_canonical_reasons.bcr_canonical_reason
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.22
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.10
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
-0.47
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.05
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.26
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.08
-</td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-</tr>
-<tr>
-<td style="border-left: 0px solid black; border-top: hidden;">
-patient.biospecimen_cqcf.normal_controls.normal_control.2.method_of_normal_sample_procurement
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.16
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
-0.54
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.20
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
-0.51
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
-0.52
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
-0.50
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.42
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
-0.49
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
-0.52
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
-0.53
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.21
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.39
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
-0.53
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.31
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
-0.51
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
-0.50
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
-0.50
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.32
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.38
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
-0.49
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
-0.48
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
-0.45
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
-0.47
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.33
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.44
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
-0.49
-</td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #A50F15;color: #FFFFFF;">
-0.50
-</td>
-</tr>
-<tr>
-<td style="border-left: 0px solid black; border-top: hidden;">
-patient.biospecimen_cqcf.normal_controls.normal_control.normal_tissue.normal_tissue_anatomic_site
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.08
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.33
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.25
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.22
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.30
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.16
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.26
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.22
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.27
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.17
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.10
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.17
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.30
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.29
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.24
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.34
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
 0.19
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.43
+<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
+0.00
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.14
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.31
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
+<td align="right" style="border-left: 0px solid black;background-color: #CB181D;color: #FFFFFF;">
 0.16
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #EF3B2C;color: #FFFFFF;">
-0.34
+<td align="right" style="border-left: 0px solid black;background-color: #FB6A4A;color: #FFFFFF;">
+0.12
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
+<td align="right" style="border-left: 0px solid black;background-color: #A50F15;color: #FFFFFF;">
+0.20
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
-0.23
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.16
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.30
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.14
-</td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.30
-</td>
-</tr>
-<tr>
-<td style="border-left: 0px solid black; border-top: hidden;">
-NewTumorEventAfterInitialTreatment
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.10
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
+<td align="right" style="border-left: 0px solid black;background-color: #FCBBA1;">
 0.05
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FC9272;">
+<td align="right" style="border-left: 0px solid black;background-color: #FB6A4A;color: #FFFFFF;">
+0.12
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #FB6A4A;color: #FFFFFF;">
+0.11
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #CB181D;color: #FFFFFF;">
+0.18
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
+0.00
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #FCBBA1;">
+0.06
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #FC9272;">
+0.08
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #CB181D;color: #FFFFFF;">
+0.16
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #CB181D;color: #FFFFFF;">
+0.17
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #FB6A4A;color: #FFFFFF;">
+0.12
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #FFF5F0;">
+0.00
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #FB6A4A;color: #FFFFFF;">
+0.11
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #FC9272;">
+0.08
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #67000D;color: #FFFFFF;">
 0.22
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
+<td align="right" style="border-left: 0px solid black;background-color: #A50F15;color: #FFFFFF;">
+0.19
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #FB6A4A;color: #FFFFFF;">
+0.10
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #67000D;color: #FFFFFF;">
+0.22
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #FCBBA1;">
+0.06
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #FB6A4A;color: #FFFFFF;">
+0.11
+</td>
+<td align="right" style="border-left: 0px solid black;background-color: #FEE0D2;">
 0.04
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
+<td align="right" style="border-left: 0px solid black;background-color: #FC9272;">
+0.09
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
+<td align="right" style="border-left: 0px solid black;background-color: #A50F15;color: #FFFFFF;">
+0.18
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FB6A4A;color: #FFFFFF;">
-0.28
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.02
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.04
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.05
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
-0.05
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FCBBA1;">
-0.13
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #CB181D;color: #FFFFFF;">
-0.44
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.00
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FEE0D2;">
+<td align="right" style="border-left: 0px solid black;background-color: #FCBBA1;">
 0.07
 </td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.03
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #67000D;color: #FFFFFF;">
-0.52
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
-</td>
-<td align="right" style="border-left: 0px solid black;border-right:0px solid black;border-top: hidden;background-color: #FFF5F0;">
-0.01
+<td align="right" style="border-left: 0px solid black;border-right:0px solid black;background-color: #A50F15;color: #FFFFFF;">
+0.20
 </td>
 </tr>
 <tr>

@@ -80,7 +80,8 @@ meta_sub1 <- subset(meta_sub1, select = -patientID)
 ```{r}
 # Randomly select for 100 rows
 set.seed(1)
-random_sample_ind <- sample(1:nrow(meta_sub1), 100)
+#random_sample_ind <- sample(1:nrow(meta_sub1), 100)
+random_sample_ind <- c(1:427)
 meta_sub2 <- meta_sub1[random_sample_ind,]
 ```
 
@@ -186,8 +187,8 @@ for (i in seq_len(ncol(factorTb))) {
 ```{r}
 #rsq_factorAttr_tb[1:4, 1:4]
 max_rav_2 <- apply(rsq_factorAttr_tb, 1, max)
-max_attr_2 <- which(max_rav_2 > 0.4 & max_rav_2 < 1)
-max_rav[max_attr]
+max_attr_2 <- which(max_rav_2 > 0.2 & max_rav_2 < 1)
+max_rav_2[max_attr_2]
 ```
 ## Features with an r squared value > 0.4
 ```{r}
