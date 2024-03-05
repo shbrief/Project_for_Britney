@@ -24,6 +24,8 @@ suppressPackageStartupMessages({
   library(magick)
   library(wordcloud)
   library(EnrichmentBrowser)
+  library(ztable)
+  library(magrittr)
 })
 ```
 
@@ -57,8 +59,8 @@ hnsc_meta <- colData(hnsc_rna)
 val_hnsc <- validate(datasets$HNSC, RAVmodel)
 heatmapTable(val_hnsc, RAVmodel)
 ```
-# Subset
 
+# Subset
 ## Filter attributes
 ```{r}
 sparsity_summary <- table(colSums(is.na(hnsc_meta)))
@@ -98,11 +100,11 @@ numTb <- meta_sub2[, sapply(meta_sub2, class) %in% c('numeric', 'integer')]
 sampleScore <- calculateScore(hnsc_rna, RAVmodel)
 ```
 
-```{r}
-# Select for 30 RAVs
+```{r warning = FALSE, message = FALSE}
+# Select for RAVs with a minimum silhouette width of 0.4
 val_all <- validate(hnsc_rna, RAVmodel)
 validated_ind <- validatedSignatures(val_all, num.out = 30, RAVmodel,
-                                     swCutoff = 0, indexOnly = TRUE)
+                                     swCutoff = 0.4, indexOnly = TRUE)
 validated_ind
 ```
 
@@ -119,7 +121,7 @@ calculateRsq <- function (x, y) stats::cor(x, y, use = "na.or.complete") ^ 2
 ```
 
 ```{r warning=FALSE}
-## Calculate r-squared for numeric attributes
+# Calculate r-squared for numeric attributes
 rsq_numAttr_tb <- as.data.frame(matrix(nrow = ncol(numTb), 
                                        ncol = ncol(sampleScore_sub)))
 
@@ -135,76 +137,109 @@ for (i in seq_len(ncol(numTb))) {
 ```
 
 ```{r}
-dim(rsq_numAttr_tb) # 330 features x 30 RAVs
+dim(rsq_numAttr_tb) # 330 features x 21 RAVs
 # rsq_numAttr_tb[1:10, 1:20]
 max_rav <- apply(rsq_numAttr_tb, 1, max)
-max_attr <- which(max_rav > 0.4 & max_rav < 1) # Decreased the lower limit
+max_attr <- which(max_rav > 0.4 & max_rav < 1) # Decreased the lower limit to 0.4
 max_rav[max_attr]
 ```
-## Features with an r squared value > 0.2
+## Features with an r squared value > 0.4
 ```{r}
 target_rsq <- rsq_numAttr_tb[max_attr,]
 ```
 
 # heatmapTable
 ```{r results='asis'}
-library(ztable)
-library(magrittr)
 options(ztable.type="html")
 z = ztable(target_rsq)
 z %>% makeHeatmap()
 ```
-
+# Calculate F-Statistic (ANOVA)
 ## Character variables
-
 ```{r}
-# Convert variables to factor data type and then numeric
+# Convert to factor data type
 factorTb <- meta_sub2[, sapply(meta_sub2, class) == 'character']
-
 factorTb[sapply(factorTb, is.character)] <- lapply(factorTb[sapply(factorTb, is.character)], as.factor)
 
-factorTb[sapply(factorTb, is.factor)] <- lapply(factorTb[sapply(factorTb, is.factor)], as.numeric)
+new_ind <- c()
+
+# Select for factors with at least two possible values
+for (i in 1:length(factorTb)) {
+  if (nlevels(factorTb[, i]) > 1) {
+    new_ind <- c(new_ind, i)
+  }
+}
+
+new_factorTb <- factorTb[,new_ind]
 ```
 
+```{r}
+# Calculate p-value for factor attributes
+aov_factorAttr_tb <- as.data.frame(matrix(nrow = ncol(new_factorTb),
+                                          ncol = ncol(sampleScore_sub)))
 
-```{r warning=FALSE}
-# Calculate r-squared for character attributes
-rsq_factorAttr_tb <- as.data.frame(matrix(nrow = ncol(factorTb), 
-                                       ncol = ncol(sampleScore_sub)))
+rownames(aov_factorAttr_tb) <- colnames(new_factorTb)
+colnames(aov_factorAttr_tb) <- colnames(sampleScore_sub)
 
-colnames(rsq_factorAttr_tb) <- colnames(sampleScore_sub)
-rownames(rsq_factorAttr_tb) <- colnames(factorTb)
-
-for (i in seq_len(ncol(factorTb))) {
-    for (j in seq_len(ncol(sampleScore_sub))) {
-        rsq <- calculateRsq(factorTb[,i], sampleScore_sub[,j])
-        rsq_factorAttr_tb[i, j] <- rsq
+for (i in seq_len(ncol(sampleScore_sub))) {
+  for (j in seq_len(ncol(new_factorTb))) {
+    if (!is.null(summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`Pr(>F)`[1])) {
+      aov_factorAttr_tb[j, i] <- summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`Pr(>F)`[1]
+    } else {
+      aov_factorAttr_tb[j, i] <- NA
     }
+  }
 }
 ```
 
 ```{r}
-#rsq_factorAttr_tb[1:4, 1:4]
-max_rav_2 <- apply(rsq_factorAttr_tb, 1, max)
-max_attr_2 <- which(max_rav_2 > 0.4 & max_rav_2 < 1)
-max_rav[max_attr]
+# Calculate f-statistics for factor attributes
+aov_factorAttr_fstat <- as.data.frame(matrix(nrow = ncol(new_factorTb),
+                                          ncol = ncol(sampleScore_sub)))
+
+rownames(aov_factorAttr_fstat) <- colnames(new_factorTb)
+colnames(aov_factorAttr_fstat) <- colnames(sampleScore_sub)
+
+for (i in seq_len(ncol(sampleScore_sub))) {
+  for (j in seq_len(ncol(new_factorTb))) {
+    if (!is.null(summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`F value`[1])) {
+      aov_factorAttr_fstat[j, i] <- summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`F value`[1]
+    } else {
+      aov_factorAttr_fstat[j, i] <- NA
+    }
+  }
+}
 ```
-## Features with an r squared value > 0.4
+
+
 ```{r}
-target_rsq_2 <- rsq_factorAttr_tb[max_attr_2,]
+# Select for p-values < 0.05
+min_rav <- apply(aov_factorAttr_tb, 1, min)
+min_attr <- which(min_rav < 0.05)
+head(min_rav[min_attr])
+```
+## Features with a p-value < 0.05
+```{r}
+target_aov <- aov_factorAttr_tb[min_attr,]
 ```
 
 # heatmapTable
-```{r results='asis'}
+```{r results='asis', message=FALSE}
 options(ztable.type="html")
-z = ztable(target_rsq_2)
-z %>% makeHeatmap()
+ztable(target_aov) %>%
+  makeHeatmap(palette = 'Blues') %>%
+  print(caption="ANOVA p-values")
 ```
-
+## RAV Exploration
 ```{r}
-ind <- 4488
+ind <- 1125
 findStudiesInCluster(RAVmodel, ind, studyTitle = TRUE)
 subsetEnrichedPathways(RAVmodel, ind, include_nes = TRUE) %>% as.data.frame
 drawWordcloud(RAVmodel, ind)
 ```
-
+```{r}
+ind <- 4486
+findStudiesInCluster(RAVmodel, ind, studyTitle = TRUE)
+subsetEnrichedPathways(RAVmodel, ind, include_nes = TRUE) %>% as.data.frame
+drawWordcloud(RAVmodel, ind)
+```
