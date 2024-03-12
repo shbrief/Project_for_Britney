@@ -16,7 +16,7 @@ aov_pvalue <- read.csv("aov_pvalue.csv", row.names = 1)
 
 ```{r}
 ## Remove potential batch effects-associated attributes
-batch_ind <- grep("analyte|portion|procurement|aliquot", 
+batch_ind <- grep("analyte|portion|procurement|aliquot|uuid|barcode", 
                   rownames(aov_fvalue))
 ```
 
