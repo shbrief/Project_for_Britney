@@ -162,7 +162,7 @@ z %>% makeHeatmap()
 ```{r}
 # Convert to factor data type
 factorTb <- meta_sub2[, sapply(meta_sub2, class) == 'character']
-factorTb[sapply(factorTb, is.character)] <- lapply(factorTb[sapply(factorTb, is.character)], as.factor)
+factorTb[sapply(factorTb, is.character)] <- lapply(factorTb[sapply(factorTb, is.character)], factor, exclude = NULL)
 
 new_ind <- c()
 
@@ -178,46 +178,59 @@ new_factorTb <- factorTb[,new_ind]
 
 ```{r}
 # Calculate p-value for factor attributes
-aov_factorAttr_tb <- as.data.frame(matrix(nrow = ncol(new_factorTb),
-                                          ncol = ncol(sampleScore_sub)))
+aov_res <- as.data.frame(matrix(nrow = ncol(new_factorTb),
+                                ncol = ncol(sampleScore_sub)))
 
-rownames(aov_factorAttr_tb) <- colnames(new_factorTb)
-colnames(aov_factorAttr_tb) <- colnames(sampleScore_sub)
+rownames(aov_res) <- colnames(new_factorTb)
+colnames(aov_res) <- colnames(sampleScore_sub)
+
+aov_fvalue <- aov_res
+aov_pvalue <- aov_res
 
 for (i in seq_len(ncol(sampleScore_sub))) {
   for (j in seq_len(ncol(new_factorTb))) {
-    if (!is.null(summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`Pr(>F)`[1])) {
-      aov_factorAttr_tb[j, i] <- summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`Pr(>F)`[1]
-    } else {
-      next
-    }
+      
+      ## ANOVA
+      aov <- aov(sampleScore_sub[, i] ~ new_factorTb[, j])
+      
+      ## F value
+      fval <- summary(aov)[[1]]$`F value`[1]
+      aov_fvalue[j, i] <- fval
+      
+      ## P value
+      pval <- summary(aov)[[1]]$`Pr(>F)`[1]
+      aov_pvalue[j, i] <- pval
+  }
+}
+
+```{r mcc, echo=FALSE}
+aov_fvalue <- aov_res
+aov_pvalue <- aov_res
+
+for (i in seq_len(ncol(sampleScore_sub))) {
+  for (j in seq_len(ncol(new_factorTb))) {
+      
+      ## ANOVA
+      mcc_res <- mcc(sampleScore_sub[, i] ~ new_factorTb[, j])
+      
+      ## F value
+      fval <- summary(aov)[[1]]$`F value`[1]
+      aov_fvalue[j, i] <- fval
+      
+      ## P value
+      pval <- summary(aov)[[1]]$`Pr(>F)`[1]
+      aov_pvalue[j, i] <- pval
   }
 }
 ```
 
-```{r}
-# Calculate f-statistics for factor attributes
-aov_factorAttr_fstat <- as.data.frame(matrix(nrow = ncol(new_factorTb),
-                                          ncol = ncol(sampleScore_sub)))
 
-rownames(aov_factorAttr_fstat) <- colnames(new_factorTb)
-colnames(aov_factorAttr_fstat) <- colnames(sampleScore_sub)
-
-for (i in seq_len(ncol(sampleScore_sub))) {
-  for (j in seq_len(ncol(new_factorTb))) {
-    if (!is.null(summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`F value`[1])) {
-      aov_factorAttr_fstat[j, i] <- summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`F value`[1]
-    } else {
-      next
-    }
-  }
-}
-
-summary(aov(sampleScore_sub[, 1] ~ new_factorTb[, 2]))
-summary(aov(sampleScore_sub[, 1] ~ new_factorTb[, 3]))
-
-new_factorTb[1:5, 1:5]
+```{r echo=FALSE, eval=FALSE}
+## Save for plotting optimization
+write.csv(aov_fvalue, "aov_fvalue.csv", row.names = TRUE)
+write.csv(aov_pvalue, "aov_pvalue.csv", row.names = TRUE)
 ```
+
 ```{r}
 # Select for p-values < 0.05
 min_rav <- apply(aov_factorAttr_tb, 1, min)
