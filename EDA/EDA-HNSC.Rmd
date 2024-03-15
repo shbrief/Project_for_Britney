@@ -85,8 +85,9 @@ nrow(hnsc_meta)
 nrow(hnsc_meta)/1.5
 nrow(hnsc_meta)/10
 
-# Select for columns with more than ~13% completeness
-keep_attr_ind <- which(colSums(!is.na(hnsc_meta)) > round(nrow(hnsc_meta)/7.5))
+# Only select for columns with more than 10% completeness
+keep_attr_ind <- which(colSums(!is.na(hnsc_meta)) > round(nrow(hnsc_meta)/10))
+
 meta_sub1 <- hnsc_meta[keep_attr_ind]
 meta_sub1 <- subset(meta_sub1, select = -patientID)
 ```
@@ -157,7 +158,7 @@ target_rsq <- rsq_numAttr_tb[max_attr,]
 ```{r results='asis'}
 options(ztable.type="html")
 z = ztable(target_rsq)
-z %>% makeHeatmap()
+z %>% makeHeatmap(reverse=TRUE)
 ```
 
 # Calculate F-Statistic (ANOVA)
@@ -218,6 +219,7 @@ write.csv(aov_fvalue, "aov_fvalue.csv", row.names = TRUE)
 write.csv(aov_pvalue, "aov_pvalue.csv", row.names = TRUE)
 ```
 
+
 ```{r}
 # Select for p-values < 0.05
 min_rav <- apply(aov_factorAttr_tb, 1, min)
@@ -235,7 +237,7 @@ target_aov <- aov_factorAttr_tb[min_attr,]
 ```{r results='asis', message=FALSE}
 options(ztable.type="html")
 ztable(target_aov) %>%
-  makeHeatmap(palette = 'Blues') %>%
+  makeHeatmap(mycolor=gradientColor(low="Navy Blue", mid="Blue", high="Light Blue")) %>%
   print(caption="ANOVA p-values")
 ```
 
@@ -248,11 +250,19 @@ rownames(aov_factorAttr_fstat_2) <- colnames(new_factorTb)
 colnames(aov_factorAttr_fstat_2) <- colnames(sampleScore_sub)
 
 for (i in seq_len(ncol(sampleScore_sub))) {
+  
   for (j in seq_len(ncol(new_factorTb))) {
+    
     if (!is.null(summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`Pr(>F)`[1])) {
-      if (!is.null(summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`F value`[1]) & 
-          (summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`Pr(>F)`[1] < 0.01)) {
-            aov_factorAttr_fstat_2[j, i] <- summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`F value`[1]
+      
+      if (!is.null(summary(aov(sampleScore_sub[, i] ~ 
+                               new_factorTb[, j]))[[1]]$`F value`[1]) & 
+          
+          (summary(aov(sampleScore_sub[, i] ~ 
+                       new_factorTb[, j]))[[1]]$`Pr(>F)`[1] < 0.01)) {
+        
+            aov_factorAttr_fstat_2[j, i] <- summary(aov(sampleScore_sub[, i] ~ 
+                                                          new_factorTb[, j]))[[1]]$`F value`[1]
       } else {
         next
       }
@@ -262,20 +272,24 @@ for (i in seq_len(ncol(sampleScore_sub))) {
   }
 }
 ```
+
 ```{r}
+batch_ind <- grep("analyte|portion|procurement|aliquot|uuid|barcode", 
+                  rownames(aov_factorAttr_fstat_2))
+aov_factorAttr_fstat_2_no_batch <- aov_factorAttr_fstat_2[-batch_ind,]
+
 fstat_ind <- c()
 
-for (i in seq_len(ncol(new_factorTb))) {
-  if (sum(is.na(aov_factorAttr_fstat_2[i,])) < 15) {
+for (i in seq_len(nrow(aov_factorAttr_fstat_2_no_batch))) {
+  if (sum(is.na(aov_factorAttr_fstat_2_no_batch[i,])) < 20) {
     fstat_ind <- c(fstat_ind, i)
   } else {
     next
   }
 }
 
-target_aov_2 <- aov_factorAttr_fstat_2[fstat_ind,]
+target_aov_2 <- aov_factorAttr_fstat_2_no_batch[fstat_ind,]
 ```
-
 
 # heatmapTable
 ```{r results='asis', message=FALSE}
@@ -284,7 +298,6 @@ ztable(target_aov_2) %>%
   makeHeatmap(palette = 'Blues') %>%
   print(caption="ANOVA f-stats")
 ```
-
 
 ## RAV Exploration
 ```{r}
