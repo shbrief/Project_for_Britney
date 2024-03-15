@@ -202,26 +202,27 @@ for (i in seq_len(ncol(sampleScore_sub))) {
       aov_pvalue[j, i] <- pval
   }
 }
+```
 
 ```{r mcc, echo=FALSE}
-aov_fvalue <- aov_res
-aov_pvalue <- aov_res
-
-for (i in seq_len(ncol(sampleScore_sub))) {
-  for (j in seq_len(ncol(new_factorTb))) {
-      
-      ## ANOVA
-      mcc_res <- mcc(sampleScore_sub[, i] ~ new_factorTb[, j])
-      
-      ## F value
-      fval <- summary(aov)[[1]]$`F value`[1]
-      aov_fvalue[j, i] <- fval
-      
-      ## P value
-      pval <- summary(aov)[[1]]$`Pr(>F)`[1]
-      aov_pvalue[j, i] <- pval
-  }
-}
+# aov_fvalue <- aov_res
+# aov_pvalue <- aov_res
+# 
+# for (i in seq_len(ncol(sampleScore_sub))) {
+#   for (j in seq_len(ncol(new_factorTb))) {
+#       
+#       ## ANOVA
+#       mcc_res <- mcc(sampleScore_sub[, i] ~ new_factorTb[, j])
+#       
+#       ## F value
+#       fval <- summary(aov)[[1]]$`F value`[1]
+#       aov_fvalue[j, i] <- fval
+#       
+#       ## P value
+#       pval <- summary(aov)[[1]]$`Pr(>F)`[1]
+#       aov_pvalue[j, i] <- pval
+#   }
+# }
 ```
 
 

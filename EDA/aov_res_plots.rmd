@@ -25,6 +25,8 @@ apply(aov_fvalue[-batch_ind,], 1, max) %>% hist
 ```
 
 ```{r}
+aov_pvalue_no_batch <- aov_pvalue[-batch_ind,]
+
 aov_fvalue_no_batch <- aov_fvalue[-batch_ind,]
 ind <- which(apply(aov_fvalue_no_batch, 1, max) > 5)
 aov_fvalue_sub <- aov_fvalue_no_batch[ind,] %>% as.data.frame
@@ -39,4 +41,19 @@ options(ztable.type = "html")
 ztable(aov_fvalue_sub) %>%
   makeHeatmap() %>%
   print(caption = "ANOVA F-values")
+```
+
+```{r results='asis'}
+beep <- merge(aov_fvalue_no_batch, aov_pvalue_no_batch, by='row.names')
+boop <- select(beep, contains(".y"))
+
+beep_x_index <- grep(".x", colnames(beep)) %>% c()
+beep_y_index <- grep(".y", colnames(beep)) %>% c()
+
+options(ztable.type = "html")
+ztable(beep) %>%
+  makeHeatmap(rows=beep[beep[,beep_y_index]<=0.05]) %>%
+  print(caption="ANOVA F-values & p-values")
+  
+  
 ```
