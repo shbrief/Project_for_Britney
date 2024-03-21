@@ -1,5 +1,5 @@
 ---
-title: 'EDA HNSC'
+title: 'EDA on TCGA Head and Neck Squamous Cell Carcinoma (HNSC)'
 author: "Sehyun Oh, Britney Pheng"
 date: "`r format(Sys.time(), '%B %d, %Y')`"
 format:
@@ -54,20 +54,28 @@ hnsc_rna <- getWithColData(hnsc,
 hnsc_meta <- colData(hnsc_rna)
 ```
 
-# heatmapTable: HNSC
+# Validation
 ```{r message=FALSE}
 val_hnsc <- validate(datasets$HNSC, RAVmodel)
 heatmapTable(val_hnsc, RAVmodel)
 ```
 
+```{r warning = FALSE, message = FALSE}
+# Select for RAVs with a minimum silhouette width of 0.4
+val_all <- validate(hnsc_rna, RAVmodel)
+validated_ind <- validatedSignatures(val_all, num.out = 30, RAVmodel,
+                                     swCutoff = 0.4, indexOnly = TRUE)
+```
+
 # Subset
-## Filter attributes
+## Filter out sparse features
 ```{r}
 sparsity_summary <- table(colSums(is.na(hnsc_meta)))
 sparsity_summary
 ```
-## Sparsity Plot
+
 ```{r echo=FALSE}
+## Sparsity Plot
 plot(stack(sparsity_summary)$ind, 
      stack(sparsity_summary)$values)
 ```
@@ -76,8 +84,10 @@ plot(stack(sparsity_summary)$ind,
 nrow(hnsc_meta)
 nrow(hnsc_meta)/1.5
 nrow(hnsc_meta)/10
+
 # Only select for columns with more than 10% completeness
-keep_attr_ind <- which(colSums(!is.na(hnsc_meta)) > round(nrow(hnsc_meta)/7.5))
+keep_attr_ind <- which(colSums(!is.na(hnsc_meta)) > round(nrow(hnsc_meta)/10))
+
 meta_sub1 <- hnsc_meta[keep_attr_ind]
 meta_sub1 <- subset(meta_sub1, select = -patientID)
 ```
@@ -89,7 +99,7 @@ random_sample_ind <- sample(1:nrow(meta_sub1), 100)
 meta_sub2 <- meta_sub1[random_sample_ind,]
 ```
 
-
+## Coerce data types
 ```{r}
 # Check for data types in listData
 unique(sapply(hnsc_meta@listData, type))
@@ -98,21 +108,13 @@ charcTb <- meta_sub2[, sapply(meta_sub2, class) == 'character']
 numTb <- meta_sub2[, sapply(meta_sub2, class) %in% c('numeric', 'integer')]
 ```
 
+
+# Sample scores
 ```{r}
-# Calculate validation scores
+# Calculate sample scores
 sampleScore <- calculateScore(hnsc_rna, RAVmodel)
-```
 
-```{r warning = FALSE, message = FALSE}
-# Select for RAVs with a minimum silhouette width of 0.4
-val_all <- validate(hnsc_rna, RAVmodel)
-validated_ind <- validatedSignatures(val_all, num.out = 30, RAVmodel,
-                                     swCutoff = 0.4, indexOnly = TRUE)
-validated_ind
-```
-
-```{r}
-# Subset sampleScore to join with MCPcounter
+# Subset sample score for validated RAVs only
 sampleScore_sub <- sampleScore[random_sample_ind, validated_ind] %>% as.data.frame() 
 ```
 
@@ -146,6 +148,7 @@ max_rav <- apply(rsq_numAttr_tb, 1, max)
 max_attr <- which(max_rav > 0.4 & max_rav < 1) # Decreased the lower limit to 0.4
 max_rav[max_attr]
 ```
+
 ## Features with an r squared value > 0.4
 ```{r}
 target_rsq <- rsq_numAttr_tb[max_attr,]
@@ -155,25 +158,31 @@ target_rsq <- rsq_numAttr_tb[max_attr,]
 ```{r results='asis'}
 options(ztable.type="html")
 z = ztable(target_rsq)
-z %>% makeHeatmap()
+z %>% makeHeatmap(reverse=TRUE)
 ```
+
 # Calculate F-Statistic (ANOVA)
 ## Character variables
 ```{r}
-# Convert to factor data type
+## Convert to factor data type
 factorTb <- meta_sub2[, sapply(meta_sub2, class) == 'character']
-factorTb[sapply(factorTb, is.character)] <- lapply(factorTb[sapply(factorTb, is.character)], factor, exclude = NULL)
+char_cols <- sapply(factorTb, is.character)
+factorTb[char_cols] <- lapply(factorTb[char_cols], factor, exclude = NULL)
 
-new_ind <- c()
+nFactorLv <- sapply(seq_len(ncol(factorTb)), function(i) nlevels(factorTb[[i]]))
+new_factorTb <- factorTb[,which(nFactorLv < 15 & nFactorLv > 1)]
 
-# Select for factors with at least two possible values
-for (i in 1:length(factorTb)) {
-  if (nlevels(factorTb[, i]) > 1 & nlevels(factorTb[, i]) < 25) {
-    new_ind <- c(new_ind, i)
-  }
-}
 
-new_factorTb <- factorTb[,new_ind]
+# new_ind <- c()
+# 
+# ## Select for factors with at least two possible values
+# for (i in seq_len(ncol(factorTb))) {
+#   if (nlevels(factorTb[, i]) > 1 & nlevels(factorTb[, i]) < 25) {
+#     new_ind <- c(new_ind, i)
+#   }
+# }
+# 
+# new_factorTb <- factorTb[,new_ind]
 ```
 
 ```{r}
@@ -204,33 +213,12 @@ for (i in seq_len(ncol(sampleScore_sub))) {
 }
 ```
 
-```{r mcc, echo=FALSE}
-# aov_fvalue <- aov_res
-# aov_pvalue <- aov_res
-# 
-# for (i in seq_len(ncol(sampleScore_sub))) {
-#   for (j in seq_len(ncol(new_factorTb))) {
-#       
-#       ## ANOVA
-#       mcc_res <- mcc(sampleScore_sub[, i] ~ new_factorTb[, j])
-#       
-#       ## F value
-#       fval <- summary(aov)[[1]]$`F value`[1]
-#       aov_fvalue[j, i] <- fval
-#       
-#       ## P value
-#       pval <- summary(aov)[[1]]$`Pr(>F)`[1]
-#       aov_pvalue[j, i] <- pval
-#   }
-# }
-```
-
-
 ```{r echo=FALSE, eval=FALSE}
 ## Save for plotting optimization
 write.csv(aov_fvalue, "aov_fvalue.csv", row.names = TRUE)
 write.csv(aov_pvalue, "aov_pvalue.csv", row.names = TRUE)
 ```
+
 
 ```{r}
 # Select for p-values < 0.05
@@ -239,6 +227,7 @@ max_rav <- apply(aov_factorAttr_tb, 1, max)
 min_attr <- which(min_rav < 0.05 & max_rav < 0.5)
 head(min_rav[min_attr])
 ```
+
 ## Features with a p-value < 0.05
 ```{r}
 target_aov <- aov_factorAttr_tb[min_attr,]
@@ -248,7 +237,7 @@ target_aov <- aov_factorAttr_tb[min_attr,]
 ```{r results='asis', message=FALSE}
 options(ztable.type="html")
 ztable(target_aov) %>%
-  makeHeatmap(palette = 'Blues') %>%
+  makeHeatmap(mycolor=gradientColor(low="Navy Blue", mid="Blue", high="Light Blue")) %>%
   print(caption="ANOVA p-values")
 ```
 
@@ -261,11 +250,19 @@ rownames(aov_factorAttr_fstat_2) <- colnames(new_factorTb)
 colnames(aov_factorAttr_fstat_2) <- colnames(sampleScore_sub)
 
 for (i in seq_len(ncol(sampleScore_sub))) {
+  
   for (j in seq_len(ncol(new_factorTb))) {
+    
     if (!is.null(summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`Pr(>F)`[1])) {
-      if (!is.null(summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`F value`[1]) & 
-          (summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`Pr(>F)`[1] < 0.01)) {
-            aov_factorAttr_fstat_2[j, i] <- summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`F value`[1]
+      
+      if (!is.null(summary(aov(sampleScore_sub[, i] ~ 
+                               new_factorTb[, j]))[[1]]$`F value`[1]) & 
+          
+          (summary(aov(sampleScore_sub[, i] ~ 
+                       new_factorTb[, j]))[[1]]$`Pr(>F)`[1] < 0.01)) {
+        
+            aov_factorAttr_fstat_2[j, i] <- summary(aov(sampleScore_sub[, i] ~ 
+                                                          new_factorTb[, j]))[[1]]$`F value`[1]
       } else {
         next
       }
@@ -275,20 +272,24 @@ for (i in seq_len(ncol(sampleScore_sub))) {
   }
 }
 ```
+
 ```{r}
+batch_ind <- grep("analyte|portion|procurement|aliquot|uuid|barcode", 
+                  rownames(aov_factorAttr_fstat_2))
+aov_factorAttr_fstat_2_no_batch <- aov_factorAttr_fstat_2[-batch_ind,]
+
 fstat_ind <- c()
 
-for (i in seq_len(ncol(new_factorTb))) {
-  if (sum(is.na(aov_factorAttr_fstat_2[i,])) < 15) {
+for (i in seq_len(nrow(aov_factorAttr_fstat_2_no_batch))) {
+  if (sum(is.na(aov_factorAttr_fstat_2_no_batch[i,])) < 20) {
     fstat_ind <- c(fstat_ind, i)
   } else {
     next
   }
 }
 
-target_aov_2 <- aov_factorAttr_fstat_2[fstat_ind,]
+target_aov_2 <- aov_factorAttr_fstat_2_no_batch[fstat_ind,]
 ```
-
 
 # heatmapTable
 ```{r results='asis', message=FALSE}
@@ -297,7 +298,6 @@ ztable(target_aov_2) %>%
   makeHeatmap(palette = 'Blues') %>%
   print(caption="ANOVA f-stats")
 ```
-
 
 ## RAV Exploration
 ```{r}

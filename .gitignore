@@ -1,2 +1,5 @@
 
 data/TCGA_validationDatasets.rda
+.Rproj.user
+*.html
+*.DS_Store
