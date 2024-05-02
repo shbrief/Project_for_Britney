@@ -61,7 +61,7 @@ suppressPackageStartupMessages({
 
 ## Load TCGA dataset
 ```{r}
-load('~/Documents/GitHub/GSS-Britney/data/TCGA_validationDatasets.rda')
+load('~/Documents/GitHub/GSS/data/TCGA_validationDatasets.rda')
 datasets <- TCGA_validationDatasets[1:3]
 ```
 
@@ -109,16 +109,23 @@ plot(stack(sparsity_summary)$ind,
 ```{r}
 # Select columns with >10% completeness
 keep_attribute_ind <- which(colSums(!is.na(coad_meta)) > round(nrow(coad_meta)/10))
-meta_sub <- coad_meta[keep_attribute_ind]
-meta_sub <- subset(meta_sub, select= -patientID)
+meta_sub1 <- coad_meta[keep_attribute_ind]
+meta_sub1 <- subset(meta_sub1, select= -patientID)
+```
+
+```{r}
+# Randomly select for 100 rows
+set.seed(1)
+random_sample_ind <- sample(1:nrow(meta_sub1), 100)
+meta_sub2 <- meta_sub1[random_sample_ind,]
 ```
 
 ```{r}
 # Check for data types in listData
 unique(sapply(coad_meta@listData, type))
 
-charcTb <- meta_sub[, sapply(meta_sub, class) == 'character']
-numTb <- meta_sub[, sapply(meta_sub, class) %in% c('numeric', 'integer')]
+charcTb <- meta_sub2[, sapply(meta_sub1, class) == 'character']
+numTb <- meta_sub2[, sapply(meta_sub1, class) %in% c('numeric', 'integer')]
 ```
 
 ```{r}
@@ -127,11 +134,12 @@ sampleScore <- calculateScore(coad_rna, RAVmodel)
 ```
 
 ```{r}
-validated_ind <- validatedSignatures(validate_coad_rna, num.out = 30, RAVmodel, swCutoff = 0.5, indexOnly = TRUE)
+validated_ind <- validatedSignatures(validate_coad_rna, num.out = 500, RAVmodel, swCutoff = 0.01, indexOnly = TRUE)
 
 # Subset sampleScore to join with MCPcounter
-sampleScore_sub <- sampleScore[, validated_ind] %>% as.data.frame()
+sampleScore_sub <- sampleScore[random_sample_ind, validated_ind] %>% as.data.frame()
 ```
+
 # Calculate R-Squared Value for Numeric Variables
 ```{r calculateRsq}
 # R squared value function
@@ -157,21 +165,6 @@ rsq_numAttr <- na.omit(rsq_numAttr)
 ```
 
 ```{r}
-max_rav <- apply(rsq_numAttr, 1, max)
-max_attr <- which(max_rav > 0.5)
-
-target_rsq <- rsq_numAttr[max_attr,]
-```
-
-
-# heatmapTable
-```{r results='asis'}
-options(ztable.type='html')
-z = ztable(target_rsq)
-z %>% makeHeatmap(palette='Purples')
-```
-
-```{r}
 # Remove batch effect variables
 batch_num_ind <- grep('analyte|portion|procurement|aliquot|uuid|barcode',
                   rownames(rsq_numAttr))
@@ -180,29 +173,49 @@ rsq_numAttr_no_batch <- rsq_numAttr[-batch_num_ind,]
 
 ```{r}
 max_rav <- apply(rsq_numAttr_no_batch, 1, max)
-max_rav[max_attr]
+max_attr <- which(max_rav > 0.5)
+
+target_rsq <- rsq_numAttr_no_batch[max_attr,]
+```
+
+# heatmapTable
+```{r results='asis'}
+options(ztable.type='html')
+z = ztable(target_rsq)
+z %>% makeHeatmap(palette="Blues")
 ```
 
 ```{r}
-heatmap(as.matrix(rsq_numAttr_no_batch))
+heatmap(as.matrix(target_rsq), scale="column")
 ```
+
 # Calculate F-statistic (ANOVA) for Character Variables
 ```{r}
 # Convert to factor data type
-factorTb <- meta_sub[, sapply(meta_sub, class) == 'character']
+factorTb <- meta_sub2[, sapply(meta_sub1, class) == 'character']
 
 factorTb[sapply(factorTb, is.character)] <- lapply(factorTb[sapply(factorTb, is.character)], factor, exclude = NULL)
 
 factor_ind <- c()
+nominal_ind <- c()
 
 # Select for factors with at least two possible values
 for (i in 1:length(factorTb)) {
-  if (nlevels(factorTb[,i]) > 1) {
-    factor_ind <- c(factor_ind, i)
+  if (any(is.na(levels(factorTb[,10])))) {
+    if (nlevels(factorTb[,i]) == 3) {
+      nominal_ind <- c(nominal_ind, i)
+    } else if (nlevels(factorTb[,i]) > 3) {
+      factor_ind <- c(factor_ind, i)
+    }
+  } else {
+    if (nlevels(factorTb[,i]) > 2) {
+      factor_ind <- c(factor_ind, i)
+    }
   }
 }
 
 new_factorTb <- factorTb[,factor_ind]
+nominalTb <- factorTb[,nominal_ind]
 ```
 
 ```{r}
@@ -265,7 +278,7 @@ for (i in seq_len(ncol(sampleScore_sub))) {
     if (!is.null(summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`Pr(>F)`[1])) {
       
       if (!is.null(summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`F value`[1]) &
-          (summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`Pr(>F)`[1] < 0.01)) {
+          (summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`Pr(>F)`[1] < 0.05)) {
         sig_fval[j, i] <- summary(aov(sampleScore_sub[, i] ~ new_factorTb[, j]))[[1]]$`F value`[1]
       } else {
         next
@@ -279,7 +292,7 @@ for (i in seq_len(ncol(sampleScore_sub))) {
 fstat_ind <- c()
 
 for (i in seq_len(nrow(sig_fval))) {
-  if (sum(is.na(sig_fval[i, ])) < 11) {
+  if (sum(is.na(sig_fval[i, ])) < 220) {
     fstat_ind <- c(fstat_ind, i)
   } else {
     next
@@ -287,7 +300,7 @@ for (i in seq_len(nrow(sig_fval))) {
 }
 
 sig_fval <- sig_fval[fstat_ind,]
-
+# 
 batch_char_ind_2 <- grep('analyte|portion|procurement|aliquot|uuid|barcode',
                   rownames(sig_fval))
 sig_fval <- sig_fval[-batch_char_ind_2,]
@@ -300,10 +313,85 @@ ztable(sig_fval) %>%
   makeHeatmap(palette = 'Blues') %>%
   print(caption='ANOVA F-stats with p-values < 0.01')
 ```
+
 ## RAV Exploration
 ```{r}
-ind <- 1002
+ind <- 832
 findStudiesInCluster(RAVmodel, ind, studyTitle = TRUE)
 drawWordcloud(RAVmodel, ind)
 ```
+
+```{r}
+sampleScore1 <- 1001
+sampleScore2 <- 1002
+
+plot_data <- sampleScore[, c("RAV1001", "RAV1002")]
+colnames(plot_data)[1] <- "sampleScore1"
+colnames(plot_data)[2] <- "sampleScore2"
+
+plot_data <- data.frame(plot_data, new_factorTb)
+
+colors <- gg_color_hue(length(unique(plot_data$patient.gender
+)) - 1)
+colors.toplot <- c(colors, "gray")
+
+pA <- ggplot(plot_data,
+             aes(x = sampleScore1, y = sampleScore2, color = patient.gender
+)) +
+  geom_point() +
+  ggtitle('Score Plot for Gender') +
+  scale_color_manual(values = colors.toplot, name = "Gender") +
+  theme_bw() +
+  theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+  geom_hline(yintercept = 0, linetype = 'dashed') +
+  geom_vline(xintercept = 0, linetype = 'dashed') +
+  xlab(paste0("RAV", sampleScore1)) + ylab(paste0("RAV", sampleScore2))
+
+print(pA)
+```
+
+```{r}
+# Function to Display Categorical Attributes' Score Plots
+
+graph_categorical <- function(a, b, c, d = 'Legend') {
+  sampleScore1 <- paste0('RAV', a)
+  sampleScore2 <- paste0('RAV', b)
+  
+  plot_data <- sampleScore_sub[, c(sampleScore1, sampleScore2)]
+  colnames(plot_data)[1] <- "sampleScore1"
+  colnames(plot_data)[2] <- "sampleScore2"
+  
+  plot_data <- data.frame(plot_data, new_factorTb)
+  plot_data_2 <- plot_data[-which(is.na(factor(plot_data[[c]]))),]
+  
+  colors <- gg_color_hue(length(unique(plot_data_2[[c]])))
+  colors.toplot <- c(colors)
+
+  pA <- ggplot(plot_data_2,
+             aes(x = sampleScore1, y = sampleScore2, color = plot_data_2[[c]]
+                 )) +
+        geom_point() +
+        #ggtitle('Score Plot for Gender') +
+        scale_color_manual(values = colors.toplot, name = d) +
+        theme_bw() +
+        theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+        geom_hline(yintercept = 0, linetype = 'dashed') +
+        geom_vline(xintercept = 0, linetype = 'dashed') +
+        xlab(sampleScore1) + ylab(sampleScore2)
+
+print(pA)
+}
+```
+
+```{r warning=FALSE}
+graph_categorical(834, 833, 'pathology_M_stage', 'Pathology M Stage')
+```
+
+```{r}
+?curatedTCGAData
+```
+
+
 
