@@ -134,7 +134,7 @@ sampleScore <- calculateScore(coad_rna, RAVmodel)
 ```
 
 ```{r}
-validated_ind <- validatedSignatures(validate_coad_rna, num.out = 500, RAVmodel, swCutoff = 0.01, indexOnly = TRUE)
+validated_ind <- validatedSignatures(validate_coad_rna, RAVmodel, num.out = 15, scoreCutoff = 0.45, indexOnly = TRUE)
 
 # Subset sampleScore to join with MCPcounter
 sampleScore_sub <- sampleScore[random_sample_ind, validated_ind] %>% as.data.frame()
@@ -189,35 +189,46 @@ z %>% makeHeatmap(palette="Blues")
 heatmap(as.matrix(target_rsq), scale="column")
 ```
 
-# Calculate F-statistic (ANOVA) for Character Variables
+# Separate out Factor Variables by number of levels (1, 2, 3+) not including NA
 ```{r}
 # Convert to factor data type
 factorTb <- meta_sub2[, sapply(meta_sub1, class) == 'character']
 
 factorTb[sapply(factorTb, is.character)] <- lapply(factorTb[sapply(factorTb, is.character)], factor, exclude = NULL)
 
-factor_ind <- c()
-nominal_ind <- c()
+#any(is.na(levels(factorTb[,2])))
+#!any(is.na(levels(factorTb[,6])))
 
-# Select for factors with at least two possible values
+single_fac_ind <- c()
+binary_fac_ind <- c()
+multi_fac_ind <- c()
+
+# Testing factor grouping
 for (i in 1:length(factorTb)) {
-  if (any(is.na(levels(factorTb[,10])))) {
-    if (nlevels(factorTb[,i]) == 3) {
-      nominal_ind <- c(nominal_ind, i)
-    } else if (nlevels(factorTb[,i]) > 3) {
-      factor_ind <- c(factor_ind, i)
-    }
+  if (nlevels(factorTb[,i]) == 1 | 
+      (nlevels(factorTb[,i]) == 2 & 
+       any(is.na(levels(factorTb[,i]))))
+      ) {
+    single_fac_ind <- c(single_fac_ind, i)
+  } else if (nlevels(factorTb[,i]) == 3 & 
+             any(is.na(levels(factorTb[,i]))) |
+             
+             (nlevels(factorTb[,i]) == 2 & 
+              !any(is.na(levels(factorTb[,i]))))
+          ) {
+    binary_fac_ind <- c(binary_fac_ind, i)
   } else {
-    if (nlevels(factorTb[,i]) > 2) {
-      factor_ind <- c(factor_ind, i)
-    }
+    multi_fac_ind <- c(multi_fac_ind, i)
   }
 }
 
-new_factorTb <- factorTb[,factor_ind]
-nominalTb <- factorTb[,nominal_ind]
+new_factorTb <- factorTb[,multi_fac_ind]
+binary_factor <- factorTb[,binary_fac_ind]
+binary_factor <- binary_factor[-c(7,8)]
+single_factor <- factorTb[,single_fac_ind]
 ```
 
+# Calculate F-statistic (ANOVA) for Character Variables
 ```{r}
 aov_res <- as.data.frame(matrix(nrow = ncol(new_factorTb),
                                 ncol = ncol(sampleScore_sub)))
@@ -314,9 +325,42 @@ ztable(sig_fval) %>%
   print(caption='ANOVA F-stats with p-values < 0.01')
 ```
 
+# Calculate t-test for binomial Character Variables
+```{r}
+t_test_res <- as.data.frame(matrix(nrow = ncol(binary_factor),
+                                ncol = ncol(sampleScore_sub)))
+
+rownames(t_test_res) <- colnames(binary_factor)
+colnames(t_test_res) <- colnames(sampleScore_sub)
+
+ttest_coad_tvalue <- t_test_res
+ttest_coad_pvalue <- t_test_res
+
+t.test(sampleScore_sub[, 1] ~ binary_factor[, 9], na.action = na.omit)
+
+binary_factor[, 9]
+
+for (i in seq_len(ncol(sampleScore_sub))) {
+  for (j in seq_len(ncol(binary_factor))) {
+    
+    ## ANOVA
+    t_test <- t.test(sampleScore_sub[, i] ~ binary_factor[, j], na.action = na.omit)
+    
+    ## F-statistic
+   ## fval <- t_test[[1]]
+    ##ttest_coad_tvalue[j, i] <- fval
+    
+    ## p-value
+   ## pval <- t_test[[3]]
+    ##ttest_coad_pvalue[j, i] <- pval
+  }
+}
+```
+
+
 ## RAV Exploration
 ```{r}
-ind <- 832
+ind <- 833
 findStudiesInCluster(RAVmodel, ind, studyTitle = TRUE)
 drawWordcloud(RAVmodel, ind)
 ```
@@ -325,14 +369,14 @@ drawWordcloud(RAVmodel, ind)
 sampleScore1 <- 1001
 sampleScore2 <- 1002
 
-plot_data <- sampleScore[, c("RAV1001", "RAV1002")]
+plot_data <- sampleScore_sub[, c("RAV1001", "RAV1002")]
 colnames(plot_data)[1] <- "sampleScore1"
 colnames(plot_data)[2] <- "sampleScore2"
 
-plot_data <- data.frame(plot_data, new_factorTb)
+plot_data <- data.frame(plot_data, binary_factor)
 
 colors <- gg_color_hue(length(unique(plot_data$patient.gender
-)) - 1)
+)))
 colors.toplot <- c(colors, "gray")
 
 pA <- ggplot(plot_data,
@@ -388,10 +432,13 @@ print(pA)
 ```{r warning=FALSE}
 graph_categorical(834, 833, 'pathology_M_stage', 'Pathology M Stage')
 ```
+```{r warning=FALSE}
+graph_categorical(834, 517, 'patient.microsatellite_instability_test_results.microsatellite_instability_test_result.mononucleotide_and_dinucleotide_marker_panel_analysis_status', 'Microsatellite')
 
-```{r}
-?curatedTCGAData
 ```
 
+```{r warning=FALSE}
+graph_categorical(832, 833, 'race', 'Race')
+```
 
 
