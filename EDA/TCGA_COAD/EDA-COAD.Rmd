@@ -210,8 +210,8 @@ for (i in 1:length(factorTb)) {
        any(is.na(levels(factorTb[,i]))))
       ) {
     single_fac_ind <- c(single_fac_ind, i)
-  } else if (nlevels(factorTb[,i]) == 3 & 
-             any(is.na(levels(factorTb[,i]))) |
+  } else if (#nlevels(factorTb[,i]) == 3 & 
+             #any(is.na(levels(factorTb[,i]))) |
              
              (nlevels(factorTb[,i]) == 2 & 
               !any(is.na(levels(factorTb[,i]))))
@@ -311,7 +311,6 @@ for (i in seq_len(nrow(sig_fval))) {
 }
 
 sig_fval <- sig_fval[fstat_ind,]
-# 
 batch_char_ind_2 <- grep('analyte|portion|procurement|aliquot|uuid|barcode',
                   rownames(sig_fval))
 sig_fval <- sig_fval[-batch_char_ind_2,]
@@ -320,43 +319,73 @@ sig_fval <- sig_fval[-batch_char_ind_2,]
 
 ```{r results='asis', message=FALSE}
 options(ztable.type='html')
-ztable(sig_fval) %>%
-  makeHeatmap(palette = 'Blues') %>%
-  print(caption='ANOVA F-stats with p-values < 0.01')
+#ztable(sig_fval) %>%
+ # makeHeatmap(palette = 'Blues') #%>%
+  #print(caption='ANOVA F-stats with p-values < 0.01')
 ```
 
 # Calculate t-test for binomial Character Variables
 ```{r}
-t_test_res <- as.data.frame(matrix(nrow = ncol(binary_factor),
+
+#Remove factors without enough y-observations
+for (i in seq_len(ncol(binary_factor))) {
+  x <- summary(binary_factor[,i])
+  
+  if (all(x > 1)) {
+    print(x)
+  } else {
+    print(paste("index", i, "does not have enough observations"))
+  }
+}
+bin_fac <- binary_factor[,-c(5, 12, 26)]
+
+t_test_res <- as.data.frame(matrix(nrow = ncol(bin_fac),
                                 ncol = ncol(sampleScore_sub)))
 
-rownames(t_test_res) <- colnames(binary_factor)
+rownames(t_test_res) <- colnames(bin_fac)
 colnames(t_test_res) <- colnames(sampleScore_sub)
 
 ttest_coad_tvalue <- t_test_res
 ttest_coad_pvalue <- t_test_res
 
-t.test(sampleScore_sub[, 1] ~ binary_factor[, 9], na.action = na.omit)
-
-binary_factor[, 9]
-
 for (i in seq_len(ncol(sampleScore_sub))) {
-  for (j in seq_len(ncol(binary_factor))) {
+  for (j in seq_len(ncol(bin_fac))) {
     
-    ## ANOVA
-    t_test <- t.test(sampleScore_sub[, i] ~ binary_factor[, j], na.action = na.omit)
+    ## t-test
+      t_test <- t.test(sampleScore_sub[, i] ~ bin_fac[,j])
     
-    ## F-statistic
-   ## fval <- t_test[[1]]
-    ##ttest_coad_tvalue[j, i] <- fval
+    ## t-value
+      tval <- t_test$statistic
+      ttest_coad_tvalue[j, i] <- tval
     
     ## p-value
-   ## pval <- t_test[[3]]
-    ##ttest_coad_pvalue[j, i] <- pval
+      pval <- t_test$p.val
+      ttest_coad_pvalue[j, i] <- pval
   }
 }
 ```
+```{r}
+heatmap(as.matrix(ttest_coad_tvalue), main = 'COAD T-Test')
+```
+```{r}
+#Only view t-values with significant p-value (<0.05)
+ttest_coad_sig_tvalue <- t_test_res
 
+
+ for (i in seq_len(ncol(sampleScore_sub))) {
+   for (j in seq_len(ncol(bin_fac))) {
+     if (t.test(sampleScore_sub[, i] ~ bin_fac[,j])$p.value < 0.05) {
+       ttest_coad_sig_tvalue[j, i] <- t.test(sampleScore_sub[, i] ~ bin_fac[,j])$statistic
+     }
+   }
+ }
+```
+```{r results='asis', message=FALSE}
+options(ztable.type='html')
+ztable(ttest_coad_sig_tvalue) %>%
+  makeHeatmap(palette = 'Blues') %>%
+  print(caption='T-test with p-values < 0.05')
+```
 
 ## RAV Exploration
 ```{r}
@@ -366,66 +395,66 @@ drawWordcloud(RAVmodel, ind)
 ```
 
 ```{r}
-sampleScore1 <- 1001
-sampleScore2 <- 1002
-
-plot_data <- sampleScore_sub[, c("RAV1001", "RAV1002")]
-colnames(plot_data)[1] <- "sampleScore1"
-colnames(plot_data)[2] <- "sampleScore2"
-
-plot_data <- data.frame(plot_data, binary_factor)
-
-colors <- gg_color_hue(length(unique(plot_data$patient.gender
-)))
-colors.toplot <- c(colors, "gray")
-
-pA <- ggplot(plot_data,
-             aes(x = sampleScore1, y = sampleScore2, color = patient.gender
-)) +
-  geom_point() +
-  ggtitle('Score Plot for Gender') +
-  scale_color_manual(values = colors.toplot, name = "Gender") +
-  theme_bw() +
-  theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank()) +
-  geom_hline(yintercept = 0, linetype = 'dashed') +
-  geom_vline(xintercept = 0, linetype = 'dashed') +
-  xlab(paste0("RAV", sampleScore1)) + ylab(paste0("RAV", sampleScore2))
-
-print(pA)
-```
-
-```{r}
-# Function to Display Categorical Attributes' Score Plots
-
-graph_categorical <- function(a, b, c, d = 'Legend') {
-  sampleScore1 <- paste0('RAV', a)
-  sampleScore2 <- paste0('RAV', b)
-  
-  plot_data <- sampleScore_sub[, c(sampleScore1, sampleScore2)]
-  colnames(plot_data)[1] <- "sampleScore1"
-  colnames(plot_data)[2] <- "sampleScore2"
-  
-  plot_data <- data.frame(plot_data, new_factorTb)
-  plot_data_2 <- plot_data[-which(is.na(factor(plot_data[[c]]))),]
-  
-  colors <- gg_color_hue(length(unique(plot_data_2[[c]])))
-  colors.toplot <- c(colors)
-
-  pA <- ggplot(plot_data_2,
-             aes(x = sampleScore1, y = sampleScore2, color = plot_data_2[[c]]
-                 )) +
-        geom_point() +
-        #ggtitle('Score Plot for Gender') +
-        scale_color_manual(values = colors.toplot, name = d) +
-        theme_bw() +
-        theme(panel.grid.major = element_blank(),
-        panel.grid.minor = element_blank()) +
-        geom_hline(yintercept = 0, linetype = 'dashed') +
-        geom_vline(xintercept = 0, linetype = 'dashed') +
-        xlab(sampleScore1) + ylab(sampleScore2)
-
-print(pA)
+# sampleScore1 <- 1001
+# sampleScore2 <- 1002
+# 
+# plot_data <- sampleScore_sub[, c("RAV1001", "RAV1002")]
+# colnames(plot_data)[1] <- "sampleScore1"
+# colnames(plot_data)[2] <- "sampleScore2"
+# 
+# plot_data <- data.frame(plot_data, binary_factor)
+# 
+# colors <- gg_color_hue(length(unique(plot_data$patient.gender
+# )))
+# colors.toplot <- c(colors, "gray")
+# 
+# pA <- ggplot(plot_data,
+#              aes(x = sampleScore1, y = sampleScore2, color = patient.gender
+# )) +
+#   geom_point() +
+#   ggtitle('Score Plot for Gender') +
+#   scale_color_manual(values = colors.toplot, name = "Gender") +
+#   theme_bw() +
+#   theme(panel.grid.major = element_blank(),
+#         panel.grid.minor = element_blank()) +
+#   geom_hline(yintercept = 0, linetype = 'dashed') +
+#   geom_vline(xintercept = 0, linetype = 'dashed') +
+#   xlab(paste0("RAV", sampleScore1)) + ylab(paste0("RAV", sampleScore2))
+# 
+# print(pA)
+# ```
+# 
+# ```{r}
+# # Function to Display Categorical Attributes' Score Plots
+# 
+# graph_categorical <- function(a, b, c, d = 'Legend') {
+#   sampleScore1 <- paste0('RAV', a)
+#   sampleScore2 <- paste0('RAV', b)
+#   
+#   plot_data <- sampleScore_sub[, c(sampleScore1, sampleScore2)]
+#   colnames(plot_data)[1] <- "sampleScore1"
+#   colnames(plot_data)[2] <- "sampleScore2"
+#   
+#   plot_data <- data.frame(plot_data, new_factorTb)
+#   plot_data_2 <- plot_data[-which(is.na(factor(plot_data[[c]]))),]
+#   
+#   colors <- gg_color_hue(length(unique(plot_data_2[[c]])))
+#   colors.toplot <- c(colors)
+# 
+#   pA <- ggplot(plot_data_2,
+#              aes(x = sampleScore1, y = sampleScore2, color = plot_data_2[[c]]
+#                  )) +
+#         geom_point() +
+#         #ggtitle('Score Plot for Gender') +
+#         scale_color_manual(values = colors.toplot, name = d) +
+#         theme_bw() +
+#         theme(panel.grid.major = element_blank(),
+#         panel.grid.minor = element_blank()) +
+#         geom_hline(yintercept = 0, linetype = 'dashed') +
+#         geom_vline(xintercept = 0, linetype = 'dashed') +
+#         xlab(sampleScore1) + ylab(sampleScore2)
+# 
+# print(pA)
 }
 ```
 
