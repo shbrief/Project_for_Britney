@@ -188,7 +188,6 @@ z %>% makeHeatmap(palette="Blues")
 ```{r}
 heatmap(as.matrix(target_rsq), scale="column")
 ```
-
 # Separate out Factor Variables by number of levels (1, 2, 3+) not including NA
 ```{r}
 # Convert to factor data type
@@ -326,7 +325,6 @@ options(ztable.type='html')
 
 # Calculate t-test for binomial Character Variables
 ```{r}
-
 #Remove factors without enough y-observations
 for (i in seq_len(ncol(binary_factor))) {
   x <- summary(binary_factor[,i])
@@ -337,6 +335,7 @@ for (i in seq_len(ncol(binary_factor))) {
     print(paste("index", i, "does not have enough observations"))
   }
 }
+
 bin_fac <- binary_factor[,-c(5, 12, 26)]
 
 t_test_res <- as.data.frame(matrix(nrow = ncol(bin_fac),
@@ -363,10 +362,16 @@ for (i in seq_len(ncol(sampleScore_sub))) {
       ttest_coad_pvalue[j, i] <- pval
   }
 }
+
+batch_char_ind <- grep('analyte|portion|procurement|aliquot|uuid|barcode',
+                  rownames(ttest_coad_tvalue))
+ttest_coad_tvalue_2 <- ttest_coad_tvalue[-batch_char_ind,]
 ```
+
 ```{r}
-heatmap(as.matrix(ttest_coad_tvalue), main = 'COAD T-Test')
+heatmap(as.matrix(ttest_coad_tvalue_2), main = 'COAD T-Test')
 ```
+
 ```{r}
 #Only view t-values with significant p-value (<0.05)
 ttest_coad_sig_tvalue <- t_test_res
@@ -374,12 +379,17 @@ ttest_coad_sig_tvalue <- t_test_res
 
  for (i in seq_len(ncol(sampleScore_sub))) {
    for (j in seq_len(ncol(bin_fac))) {
-     if (t.test(sampleScore_sub[, i] ~ bin_fac[,j])$p.value < 0.05) {
+     if (t.test(sampleScore_sub[, i] ~ bin_fac[,j])$p.val < 0.05) {
        ttest_coad_sig_tvalue[j, i] <- t.test(sampleScore_sub[, i] ~ bin_fac[,j])$statistic
      }
    }
  }
+
+batch_char_ind <- grep('analyte|portion|procurement|aliquot|uuid|barcode',
+                  rownames(ttest_coad_sig_tvalue))
+ttest_coad_sig_tvalue <- ttest_coad_sig_tvalue[-batch_char_ind,]
 ```
+
 ```{r results='asis', message=FALSE}
 options(ztable.type='html')
 ztable(ttest_coad_sig_tvalue) %>%
@@ -422,52 +432,53 @@ drawWordcloud(RAVmodel, ind)
 #   xlab(paste0("RAV", sampleScore1)) + ylab(paste0("RAV", sampleScore2))
 # 
 # print(pA)
-# ```
-# 
-# ```{r}
-# # Function to Display Categorical Attributes' Score Plots
-# 
-# graph_categorical <- function(a, b, c, d = 'Legend') {
-#   sampleScore1 <- paste0('RAV', a)
-#   sampleScore2 <- paste0('RAV', b)
-#   
-#   plot_data <- sampleScore_sub[, c(sampleScore1, sampleScore2)]
-#   colnames(plot_data)[1] <- "sampleScore1"
-#   colnames(plot_data)[2] <- "sampleScore2"
-#   
-#   plot_data <- data.frame(plot_data, new_factorTb)
-#   plot_data_2 <- plot_data[-which(is.na(factor(plot_data[[c]]))),]
-#   
-#   colors <- gg_color_hue(length(unique(plot_data_2[[c]])))
-#   colors.toplot <- c(colors)
-# 
-#   pA <- ggplot(plot_data_2,
-#              aes(x = sampleScore1, y = sampleScore2, color = plot_data_2[[c]]
-#                  )) +
-#         geom_point() +
-#         #ggtitle('Score Plot for Gender') +
-#         scale_color_manual(values = colors.toplot, name = d) +
-#         theme_bw() +
-#         theme(panel.grid.major = element_blank(),
-#         panel.grid.minor = element_blank()) +
-#         geom_hline(yintercept = 0, linetype = 'dashed') +
-#         geom_vline(xintercept = 0, linetype = 'dashed') +
-#         xlab(sampleScore1) + ylab(sampleScore2)
-# 
-# print(pA)
+```
+
+```{r}
+# Function to Display Categorical Attributes' Score Plots
+
+graph_categorical <- function(a, b, c, d, e = 'Legend') {
+  sampleScore1 <- paste0('RAV', a)
+  sampleScore2 <- paste0('RAV', b)
+
+  plot_data <- sampleScore_sub[, c(sampleScore1, sampleScore2)]
+  colnames(plot_data)[1] <- "sampleScore1"
+  colnames(plot_data)[2] <- "sampleScore2"
+
+  plot_data <- data.frame(plot_data, d)
+  plot_data_2 <- plot_data[-which(is.na(factor(plot_data[[c]]))),]
+
+  colors <- gg_color_hue(length(unique(plot_data_2[[c]])))
+  colors.toplot <- c(colors)
+
+  pA <- ggplot(plot_data_2,
+             aes(x = sampleScore1, y = sampleScore2, color = plot_data_2[[c]]
+                 )) +
+        geom_point() +
+        #ggtitle('Score Plot for Gender') +
+        scale_color_manual(values = colors.toplot, name = e) +
+        theme_bw() +
+        theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+        geom_hline(yintercept = 0, linetype = 'dashed') +
+        geom_vline(xintercept = 0, linetype = 'dashed') +
+        xlab(sampleScore1) + ylab(sampleScore2)
+
+print(pA)
 }
 ```
 
 ```{r warning=FALSE}
-graph_categorical(834, 833, 'pathology_M_stage', 'Pathology M Stage')
-```
-```{r warning=FALSE}
-graph_categorical(834, 517, 'patient.microsatellite_instability_test_results.microsatellite_instability_test_result.mononucleotide_and_dinucleotide_marker_panel_analysis_status', 'Microsatellite')
-
+graph_categorical(834, 833, 'pathology_M_stage', new_factorTb, 'Pathology M Stage')
 ```
 
 ```{r warning=FALSE}
-graph_categorical(832, 833, 'race', 'Race')
+graph_categorical(834, 517, 'patient.microsatellite_instability', new_factorTb, 'Microsatellite Instability')
+```
+
+
+```{r warning=FALSE}
+graph_categorical(832, 833, 'race', new_factorTb, 'Race')
 ```
 
 
