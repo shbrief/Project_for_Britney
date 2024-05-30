@@ -9,6 +9,7 @@ format:
         top-depth: 3
 output: html_document
 ---
+
 # Initial Setup
 ## Load packages
 ```{r packages, warning=FALSE, message=FALSE}
@@ -29,45 +30,21 @@ suppressPackageStartupMessages({
 })
 ```
 
-## Create TCGA dataset
-```{r}
-# data_dir <- "~/Documents/GitHub/GSS-Britney/data"
-# 
-# ## Raw read counts from GSE62944 from ExperimentHub
-# tcga <- GSEABenchmarkeR::loadEData("tcga", cache = FALSE, paired = FALSE, map2entrez = FALSE)
-# 
-# ## log2 transformation
-# assay(tcga$COAD) <- log2(assay(tcga$COAD) + 1)
-# assay(tcga$HNSC) <- log2(assay(tcga$HNSC) + 1)
-# 
-# TCGA_validationDatasets <- vector(mode = "list", length = 2)
-# names(TCGA_validationDatasets) <- c("COAD", "HNSC")
-# TCGA_validationDatasets[[1]] <- tcga$COAD
-# TCGA_validationDatasets[[2]] <- tcga$HNSC
-# 
-# ## TCGA-OVC dataset from curatedOvarianData
-# BiocManager::install('curatedOvarianData')
-# library(curatedOvarianData)
-# data(TCGA.RNASeqV2_eset)
-# x <- as(TCGA.RNASeqV2_eset, "SummarizedExperiment")
-# 
-# rs <- rowSums(assay(x) > 2)
-# keep <-  rs >= ncol(x) / 2
-# tcga_ovc <- x[keep,]
-# TCGA_validationDatasets[["OV"]] <- tcga_ovc
-# 
-# save(TCGA_validationDatasets, file = file.path(data_dir, "TCGA_validationDatasets.rda"))
-```
-
-## Load TCGA dataset
-```{r}
-load('~/Documents/GitHub/GSS/data/TCGA_validationDatasets.rda')
-datasets <- TCGA_validationDatasets[1:3]
-```
-
 ## Load RAVmodel
 ```{r message=FALSE, warning=FALSE}
 RAVmodel <- getModel('C2', load=TRUE)
+```
+## TCGA-COAD RNAseq data
+### From GSEABenchmarkeR
+```{r eval=FALSE}
+# Raw read counts from GSE62944 from ExperimentHub
+tcga <- GSEABenchmarkeR::loadEData("tcga",
+                                   cache = FALSE,
+                                   paired = FALSE,
+                                   map2entrez = FALSE)
+assay(tcga$COAD) <- log2(assay(tcga$COAD) + 1)
+tcga_coad <- tcga$COAD # 524 samples
+save(tcga_coad, file = "inst/extdata/TCGA_COAD_validationDatase.rda")
 ```
 
 ## Select COAD RNA metadata
@@ -80,32 +57,35 @@ coad <- curatedTCGAData(diseaseCode = 'COAD',
 coad_rna <- getWithColData(coad,
                            'COAD_RNASeq2Gene-20160128',
                            mode = 'append')
-
 coad_meta <- colData(coad_rna)
 ```
 
 # heatmapTable: COAD
 ```{r message=FALSE}
-validate_coad <- validate(datasets[['COAD']], RAVmodel)
+validate_coad <- validate(tcga_coad, RAVmodel)
 heatmapTable(validate_coad, RAVmodel)
 ```
+
 ```{r message=FALSE}
 assay(coad_rna) <- log2(assay(coad_rna) + 1)
 
 validate_coad_rna <- validate(coad_rna, RAVmodel)
 heatmapTable(validate_coad_rna, RAVmodel)
 ```
+
 # Subset
 ## Filter attributes
 ```{r}
 sparsity_summary <- table(colSums(is.na(coad_meta)))
 sparsity_summary
 ```
+
 ## Sparsity Plot
 ```{r echo=FALSE}
 plot(stack(sparsity_summary)$ind,
      stack(sparsity_summary)$values)
 ```
+
 ```{r}
 # Select columns with >10% completeness
 keep_attribute_ind <- which(colSums(!is.na(coad_meta)) > round(nrow(coad_meta)/10))
@@ -277,6 +257,10 @@ heatmap(as.matrix(coad_aov_fvalue), main = 'COAD F-Statistics')
 ```
 
 ```{r}
+
+```
+
+```{r}
 sig_fval <- as.data.frame(matrix(nrow = ncol(new_factorTb),
                                 ncol = ncol(sampleScore_sub)))
 
@@ -395,66 +379,37 @@ drawWordcloud(RAVmodel, ind)
 ```
 
 ```{r}
-# sampleScore1 <- 1001
-# sampleScore2 <- 1002
-# 
-# plot_data <- sampleScore_sub[, c("RAV1001", "RAV1002")]
-# colnames(plot_data)[1] <- "sampleScore1"
-# colnames(plot_data)[2] <- "sampleScore2"
-# 
-# plot_data <- data.frame(plot_data, binary_factor)
-# 
-# colors <- gg_color_hue(length(unique(plot_data$patient.gender
-# )))
-# colors.toplot <- c(colors, "gray")
-# 
-# pA <- ggplot(plot_data,
-#              aes(x = sampleScore1, y = sampleScore2, color = patient.gender
-# )) +
-#   geom_point() +
-#   ggtitle('Score Plot for Gender') +
-#   scale_color_manual(values = colors.toplot, name = "Gender") +
-#   theme_bw() +
-#   theme(panel.grid.major = element_blank(),
-#         panel.grid.minor = element_blank()) +
-#   geom_hline(yintercept = 0, linetype = 'dashed') +
-#   geom_vline(xintercept = 0, linetype = 'dashed') +
-#   xlab(paste0("RAV", sampleScore1)) + ylab(paste0("RAV", sampleScore2))
-# 
-# print(pA)
-# ```
-# 
-# ```{r}
 # # Function to Display Categorical Attributes' Score Plots
 # 
-# graph_categorical <- function(a, b, c, d = 'Legend') {
-#   sampleScore1 <- paste0('RAV', a)
-#   sampleScore2 <- paste0('RAV', b)
-#   
-#   plot_data <- sampleScore_sub[, c(sampleScore1, sampleScore2)]
-#   colnames(plot_data)[1] <- "sampleScore1"
-#   colnames(plot_data)[2] <- "sampleScore2"
-#   
-#   plot_data <- data.frame(plot_data, new_factorTb)
-#   plot_data_2 <- plot_data[-which(is.na(factor(plot_data[[c]]))),]
-#   
-#   colors <- gg_color_hue(length(unique(plot_data_2[[c]])))
-#   colors.toplot <- c(colors)
-# 
-#   pA <- ggplot(plot_data_2,
-#              aes(x = sampleScore1, y = sampleScore2, color = plot_data_2[[c]]
-#                  )) +
-#         geom_point() +
-#         #ggtitle('Score Plot for Gender') +
-#         scale_color_manual(values = colors.toplot, name = d) +
-#         theme_bw() +
-#         theme(panel.grid.major = element_blank(),
-#         panel.grid.minor = element_blank()) +
-#         geom_hline(yintercept = 0, linetype = 'dashed') +
-#         geom_vline(xintercept = 0, linetype = 'dashed') +
-#         xlab(sampleScore1) + ylab(sampleScore2)
-# 
-# print(pA)
+graph_categorical <- function(a, b, c, d = 'Legend') {
+  sampleScore1 <- paste0('RAV', a)
+  sampleScore2 <- paste0('RAV', b)
+
+  plot_data <- sampleScore_sub[, c(sampleScore1, sampleScore2)]
+  colnames(plot_data)[1] <- "sampleScore1"
+  colnames(plot_data)[2] <- "sampleScore2"
+
+  plot_data <- data.frame(plot_data, new_factorTb)
+  # plot_data_2 <- plot_data[-which(is.na(factor(plot_data[[c]]))),]
+  plot_data_2 <- plot_data[which(!is.na(factor(plot_data[[c]]))),]
+
+  colors <- gg_color_hue(length(unique(plot_data_2[[c]])))
+  colors.toplot <- c(colors)
+
+  pA <- ggplot(plot_data_2,
+             aes(x = sampleScore1, y = sampleScore2, color = plot_data_2[[c]]
+                 )) +
+        geom_point() +
+        #ggtitle('Score Plot for Gender') +
+        scale_color_manual(values = colors.toplot, name = d) +
+        theme_bw() +
+        theme(panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()) +
+        geom_hline(yintercept = 0, linetype = 'dashed') +
+        geom_vline(xintercept = 0, linetype = 'dashed') +
+        xlab(sampleScore1) + ylab(sampleScore2)
+
+print(pA)
 }
 ```
 
@@ -462,8 +417,7 @@ drawWordcloud(RAVmodel, ind)
 graph_categorical(834, 833, 'pathology_M_stage', 'Pathology M Stage')
 ```
 ```{r warning=FALSE}
-graph_categorical(834, 517, 'patient.microsatellite_instability_test_results.microsatellite_instability_test_result.mononucleotide_and_dinucleotide_marker_panel_analysis_status', 'Microsatellite')
-
+graph_categorical(834, 1302, 'patient.microsatellite_instability_test_results.microsatellite_instability_test_result.mononucleotide_and_dinucleotide_marker_panel_analysis_status', 'Microsatellite')
 ```
 
 ```{r warning=FALSE}
