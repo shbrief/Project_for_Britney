@@ -256,10 +256,6 @@ heatmap(as.matrix(coad_aov_fvalue), main = 'COAD F-Statistics')
 ```
 
 ```{r}
-
-```
-
-```{r}
 sig_fval <- as.data.frame(matrix(nrow = ncol(new_factorTb),
                                 ncol = ncol(sampleScore_sub)))
 
@@ -389,45 +385,9 @@ drawWordcloud(RAVmodel, ind)
 ```
 
 ```{r}
-<<<<<<< HEAD
-# # Function to Display Categorical Attributes' Score Plots
-# 
+## Function to Display Categorical Attributes' Score Plots
+ 
 graph_categorical <- function(a, b, c, d = 'Legend') {
-=======
-# sampleScore1 <- 1001
-# sampleScore2 <- 1002
-# 
-# plot_data <- sampleScore_sub[, c("RAV1001", "RAV1002")]
-# colnames(plot_data)[1] <- "sampleScore1"
-# colnames(plot_data)[2] <- "sampleScore2"
-# 
-# plot_data <- data.frame(plot_data, binary_factor)
-# 
-# colors <- gg_color_hue(length(unique(plot_data$patient.gender
-# )))
-# colors.toplot <- c(colors, "gray")
-# 
-# pA <- ggplot(plot_data,
-#              aes(x = sampleScore1, y = sampleScore2, color = patient.gender
-# )) +
-#   geom_point() +
-#   ggtitle('Score Plot for Gender') +
-#   scale_color_manual(values = colors.toplot, name = "Gender") +
-#   theme_bw() +
-#   theme(panel.grid.major = element_blank(),
-#         panel.grid.minor = element_blank()) +
-#   geom_hline(yintercept = 0, linetype = 'dashed') +
-#   geom_vline(xintercept = 0, linetype = 'dashed') +
-#   xlab(paste0("RAV", sampleScore1)) + ylab(paste0("RAV", sampleScore2))
-# 
-# print(pA)
-```
-
-```{r}
-# Function to Display Categorical Attributes' Score Plots
-
-graph_categorical <- function(a, b, c, d, e = 'Legend') {
->>>>>>> 201598d483526fe037bb8b6e15712e16be1eb529
   sampleScore1 <- paste0('RAV', a)
   sampleScore2 <- paste0('RAV', b)
 
@@ -435,14 +395,8 @@ graph_categorical <- function(a, b, c, d, e = 'Legend') {
   colnames(plot_data)[1] <- "sampleScore1"
   colnames(plot_data)[2] <- "sampleScore2"
 
-<<<<<<< HEAD
   plot_data <- data.frame(plot_data, new_factorTb)
-  # plot_data_2 <- plot_data[-which(is.na(factor(plot_data[[c]]))),]
   plot_data_2 <- plot_data[which(!is.na(factor(plot_data[[c]]))),]
-=======
-  plot_data <- data.frame(plot_data, d)
-  plot_data_2 <- plot_data[-which(is.na(factor(plot_data[[c]]))),]
->>>>>>> 201598d483526fe037bb8b6e15712e16be1eb529
 
   colors <- gg_color_hue(length(unique(plot_data_2[[c]])))
   colors.toplot <- c(colors)
@@ -452,11 +406,7 @@ graph_categorical <- function(a, b, c, d, e = 'Legend') {
                  )) +
         geom_point() +
         #ggtitle('Score Plot for Gender') +
-<<<<<<< HEAD
         scale_color_manual(values = colors.toplot, name = d) +
-=======
-        scale_color_manual(values = colors.toplot, name = e) +
->>>>>>> 201598d483526fe037bb8b6e15712e16be1eb529
         theme_bw() +
         theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank()) +
@@ -469,14 +419,10 @@ print(pA)
 ```
 
 ```{r warning=FALSE}
-<<<<<<< HEAD
 graph_categorical(834, 833, 'pathology_M_stage', 'Pathology M Stage')
 ```
 ```{r warning=FALSE}
 graph_categorical(834, 1302, 'patient.microsatellite_instability_test_results.microsatellite_instability_test_result.mononucleotide_and_dinucleotide_marker_panel_analysis_status', 'Microsatellite')
-=======
-graph_categorical(834, 833, 'pathology_M_stage', new_factorTb, 'Pathology M Stage')
->>>>>>> 201598d483526fe037bb8b6e15712e16be1eb529
 ```
 
 ```{r warning=FALSE}
