@@ -1,0 +1,79 @@
+---
+title: 'Colon Adenocarcinoma (COAD) EDA: categorical variables'
+author: "Sehyun Oh, Britney Pheng"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+format:
+    html:
+        fontsize: 14pxs
+        toc: true
+        top-depth: 3
+output: html_document
+---
+
+# Initial Setup
+## Load packages
+```{r packages, warning=FALSE, message=FALSE}
+suppressPackageStartupMessages({
+    library(tidyverse)
+})
+```
+
+## Load data
+```{r message=FALSE}
+## SummarizedExperiment object containing COAD train dataset 
+coad_train <- readRDS("data/tcga_coad_train.rds") # 20,501 genes x 261 samples
+
+## Sample scores for the train set (80% of the randomly selected COAD samples)
+## Only the top 15 validated RAVs
+sampleScore_sub <- read.csv("data/sampleScore_train.csv", row.names = 1) # 261 samples x 15 RAVs
+
+## Training set's metadata: numeric variables
+numTb <- read.csv("data/meta_train_num.csv", row.names = 1) # 261 samples x 423 metadata attributes (num)
+```
+
+# Numeric Variables
+## Calculate R-Squared Value
+```{r calculateRsq}
+## R squared value function
+calculateRsq <- function (x, y) stats::cor(x, y, use = 'na.or.complete') ^ 2
+```
+
+```{r warning=FALSE}
+## Calculate r-squared for numeric attributes
+rsq_numAttr <- as.data.frame(matrix(nrow = ncol(numTb),
+                                    ncol = ncol(sampleScore_sub)))
+
+colnames(rsq_numAttr) <- colnames(sampleScore_sub)
+rownames(rsq_numAttr) <- colnames(numTb)
+
+for (i in seq_len(ncol(numTb))) {
+  for (j in seq_len(ncol(sampleScore_sub))) {
+    rsq <- calculateRsq(numTb[[i]], sampleScore_sub[, j])
+    rsq_numAttr[i, j] <- rsq
+  }
+}
+
+rsq_numAttr <- na.omit(rsq_numAttr)
+```
+
+# Plot the high R-squred
+```{r}
+curoff <- 0.3 # cutoff of the minimum r-sq value
+
+max_rav <- apply(rsq_numAttr, 1, max)
+max_attr <- which(max_rav > curoff) # the maximum r-sq of the sample score should be above this cutoff
+target_rsq <- rsq_numAttr[max_attr,]
+```
+
+```{r results='asis', echo=FALSE, eval=FALSE}
+options(ztable.type='html')
+z = ztable(target_rsq)
+z %>% makeHeatmap(palette="Blues")
+```
+
+```{r}
+heatmap(as.matrix(target_rsq), scale = "none")
+
+## Value is centered and scaled in the column direction (`scale = "column"`)
+heatmap(as.matrix(target_rsq), scale = "column")
+```
