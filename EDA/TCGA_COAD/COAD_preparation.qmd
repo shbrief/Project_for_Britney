@@ -1,0 +1,155 @@
+---
+title: 'Colon Adenocarcinoma (COAD) Exploratory Data Analysis'
+author: "Sehyun Oh, Britney Pheng"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+format:
+    html:
+        fontsize: 14pxs
+        toc: true
+        top-depth: 3
+output: html_document
+---
+
+# Initial Setup
+## Load packages
+```{r packages, warning=FALSE, message=FALSE}
+suppressPackageStartupMessages({
+  # BiocManager
+  library(GenomicSuperSignature)
+  library(curatedTCGAData)
+  library(MultiAssayExperiment)
+  library(TCGAutils)
+  library(ComplexHeatmap)
+  
+  # CRAN
+  library(tidyverse) # includes dplyr, ggplot2, magrittr, tidyr
+  library(magick)
+  library(wordcloud)
+  library(ztable)
+  library(metafolio)
+})
+```
+
+## Load RAVmodel
+```{r message=FALSE, warning=FALSE}
+RAVmodel <- getModel('C2', load=TRUE)
+```
+
+## TCGA-COAD RNAseq data
+```{r from_GSEABenchmarkeR, echo=FALSE, eval=FALSE}
+## Raw read counts from GSE62944 from ExperimentHub
+tcga <- GSEABenchmarkeR::loadEData("tcga",
+                                    cache = FALSE,
+                                    paired = FALSE,
+                                    map2entrez = FALSE)
+assay(tcga$COAD) <- log2(assay(tcga$COAD) + 1)
+tcga_coad <- tcga$COAD # 524 samples
+save(tcga_coad, file = "inst/extdata/TCGA_COAD_validationDatase.rda")
+```
+
+```{r message=FALSE, warning=FALSE}
+coad <- curatedTCGAData(diseaseCode = 'COAD',
+                        assays = 'RNA*',
+                        version = '2.1.1',
+                        dry.run = FALSE)
+```
+
+```{r}
+## COAD RNAseq
+coad_rna <- getWithColData(coad,
+                           'COAD_RNASeq2Gene-20160128', # RSEM TPM gene expression values
+                           mode = 'append')
+assay(coad_rna) <- log2(assay(coad_rna) + 1) # log-transformed
+
+## COAD metadata
+coad_meta <- colData(coad_rna)
+```
+
+# HeatmapTable
+```{r message=FALSE}
+validate_coad_rna <- validate(coad_rna, RAVmodel)
+heatmapTable(validate_coad_rna, RAVmodel)
+```
+
+# Subset
+## Metadata attribute sparsity
+```{r}
+sparsity_summary <- table(colSums(is.na(coad_meta)))
+plot(stack(sparsity_summary)$ind,
+     stack(sparsity_summary)$values,
+     xlab = paste("# of missing values", paste0("(out of ", nrow(coad_meta), ")")), 
+     ylab = "# of samples")
+```
+
+```{r}
+## Select attributes with >10% completeness
+non_sparse_ind <- which(colSums(!is.na(coad_meta)) > round(nrow(coad_meta)/10))
+meta_non_sparse <- coad_meta[non_sparse_ind] %>% subset(select = -patientID) # remove `patientID`
+```
+
+## Training set
+```{r}
+## Randomly select 80% of samples for training
+set.seed(1)
+num_sample <- ncol(coad_rna)
+train_sample_ind <- sample(seq_len(num_sample), round(num_sample*0.8))
+
+meta_train <- meta_non_sparse[train_sample_ind,] # 261 samples x 869 metadata attributes
+coad_train <- coad_rna[, train_sample_ind] # 20,501 genes x 261 samples
+```
+
+Remove batch effect variables from metadata table
+```{r}
+batch_var <- "analyte|portion|procurement|aliquot|uuid|barcode"
+batch_ind <- grep(batch_var, colnames(meta_train))
+meta_train <- meta_train[,-batch_ind] # 261 samples x 290 metadata attributes
+```
+
+## Based on variable types
+```{r}
+## Check for data types in listData
+var_type <- meta_train@listData
+unique(sapply(var_type, type))
+
+## Separate training data's metadata into two subsets: 
+## character variables (~ categorical) and numeric variables (~ continuous)
+charcTb <- meta_train[, sapply(var_type, class) == 'character'] # 261 samples x 182 metadata attributes (char)
+numTb <- meta_train[, sapply(var_type, class) %in% c('numeric', 'integer')] # 261 samples x 108 metadata attributes (num)
+```
+
+
+# Sample Score
+```{r}
+## Calculate validation scores
+sampleScore <- calculateScore(coad_train, RAVmodel)
+```
+
+Samlple scores only for the validated RAVs
+```{r}
+validate_coad <- validate(coad_train, RAVmodel)
+heatmapTable(validate_coad, RAVmodel)
+
+validated_ind <- validatedSignatures(validate_coad, 
+                                     RAVmodel, 
+                                     num.out = 15, 
+                                     scoreCutoff = 0.45, 
+                                     indexOnly = TRUE)
+
+## Subset sampleScore
+sampleScore_sub <- sampleScore[,validated_ind] %>% as.data.frame()
+```
+
+
+# Save
+```{r}
+## SummarizedExperiment object containing COAD train dataset 
+saveRDS(coad_train, "data/tcga_coad_train.rds") # 20,501 genes x 261 samples
+
+## Sample scores for the train set (80% of the randomly selected COAD samples)
+## Only the top 15 validated RAVs
+write.csv(sampleScore_sub, "data/sampleScore_train.csv") # 261 samples x 15 RAVs
+
+## Training set's metadata: character and numeric variables
+write.csv(charcTb, "data/meta_train_char.csv", row.names = TRUE)
+write.csv(numTb, "data/meta_train_num.csv", row.names = TRUE)
+```
