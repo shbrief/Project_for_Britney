@@ -28,6 +28,9 @@ sampleScore_sub <- read.csv("data/sampleScore_train.csv", row.names = 1) # 261 s
 ## Training set's metadata: character variables
 charTb <- read.csv("data/meta_train_char.csv", row.names = 1) # 261 samples x 182 metadata attributes (char)
 
+## All the metadata for training data with >10% completeness (for color)
+meta_train <- read.csv("data/meta_train_all.csv", row.names = 1) # 261 samples x 869 metadata attributes (>10% complete)
+
 ## Convert character variables into the `factor` data type
 factorTb <- charTb
 factorTb[sapply(factorTb, is.character)] <- lapply(factorTb[sapply(factorTb, is.character)], factor)
@@ -186,10 +189,8 @@ gss_boxplot(ravNum = 1302,
 #' 
 #' @param rav1 Integer(1). RAV to be plotted on x-axis.
 #' @param rav2 Integer(1). RAV to be plotted on y-axis.
-#' @param meta A data frame containing metadata. Rows are samples and columns
-#' are metadata attributes. The `attrName` input should be in the column.
-#' @param sampleScore A data frame containing sample scores. Rows are samples
-#' and columns are RAVs.
+#' @param dat A data frame containing both metadata and sample scores. Rows
+#' are samples. The `attrName` input should be in the column.
 #' @param attrName Character(1). The name of the attribute to color-label.
 #' @param legend Character(1). Plot legend title. If not provided (default),
 #' the `attrName` is used.
@@ -200,29 +201,26 @@ gss_boxplot(ravNum = 1302,
 #' 
 gss_scatter_plot <- function(rav1, 
                              rav2, 
-                             meta, 
-                             sampleScore, 
+                             dat,
                              attrName,
                              legend = NA) {
     
     rav1Name <- paste0("RAV", rav1)
     rav2Name <- paste0("RAV", rav2)
     
-    ss <- sampleScore[, c(rav1Name, rav2Name)]
+    ss <- df[, c(rav1Name, rav2Name)]
     rownames(ss) <- gsub("\\.", "-", rownames(ss)) # reformat sample names in the sample score table
-    df <- merge(ss, meta, by = "row.names") %>%
-        filter(!is.na(.[[attrName]]))
+    df <- df %>% filter(!is.na(.[[attrName]]))
     
-    colors <- gg_color_hue(length(unique(df[[attrName]])))
+    scaleType <- scale_type(df[[attrName]])
     
     if (is.na(legend)) {legend <- attrName}
 
-    pA <- df %>% 
+    p <- df %>% 
         ggplot(aes(x = .data[[rav1Name]], 
                    y = .data[[rav2Name]], 
                    color = .data[[attrName]])) +
         geom_point() +
-        scale_color_manual(values = colors, name = legend) +
         theme_bw() +
         theme(panel.grid.major = element_blank(),
               panel.grid.minor = element_blank()) +
@@ -230,25 +228,37 @@ gss_scatter_plot <- function(rav1,
         geom_vline(xintercept = 0, linetype = 'dashed') +
         xlab(rav1Name) + ylab(rav2Name)
     
-    print(pA)
+    if (scaleType == "continuous") {
+        p_colored <- p + 
+            scale_color_continuous(type = "viridis", name = legend)
+    } else {
+        colors <- gg_color_hue(length(unique(df[[attrName]])))
+        p_colored <- p + scale_color_manual(values = colors, name = legend)
+    }
+    
+    print(p_colored)
 }
 ```
 
 Test different cases
 ```{r}
-gss_scatter_plot(220,
-                 579, 
-                 factorTb, 
-                 sampleScore_sub,
-                 attrName = "patient.kras_mutation_found")
+df_all <- merge(meta_train, sampleScore_sub, by = "row.names")
+
+colnames(meta_train)[grep("cea", colnames(meta_train), TRUE)]
+colnames(meta_train)[grep("ca", colnames(meta_train), TRUE)]
+
+df <- df_all %>% filter(patient.preoperative_pretreatment_cea_level < 50)
+cea_col <- "patient.preoperative_pretreatment_cea_level"
+gss_scatter_plot(220, 579, df, attrName = "patient.braf_gene_analysis_performed")
+
+plot(df$RAV220, df[[cea_col]])
 ```
 
 ```{r}
 attrNames <- colnames(factorTb)[grep("stage", colnames(factorTb), TRUE)]
 for (attrName in attrNames) {
-    gss_scatter_plot(220, 579, 
-                     factorTb, 
-                     sampleScore_sub,
-                     attrName = attrName)
+    gss_scatter_plot(220, 579, df, attrName = attrName)
 }
 ```
+
+
