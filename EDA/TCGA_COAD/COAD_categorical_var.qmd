@@ -31,8 +31,7 @@ sampleScore_sub <- read.csv("data/sampleScore_train.csv", row.names = 1) # 261 s
 charTb <- read.csv("data/meta_train_char.csv", row.names = 1) # 261 samples x 182 metadata attributes (char)
 ```
 
-
-# Convert to factor
+## Prepare data
 Convert character variables into the `factor` data type
 ```{r}
 factorTb <- charTb
@@ -49,42 +48,15 @@ nlevel <- sapply(factorTb, function(x) {
 factorTb_1_lv <- factorTb[nlevel == 1]
 factorTb_2_lv <- factorTb[nlevel == 2]
 factorTb_m_lv <- factorTb[nlevel > 2]
-
-# single_fac_ind <- c()
-# binary_fac_ind <- c()
-# multi_fac_ind <- c()
-# 
-# # Testing factor grouping
-# for (i in seq_len(ncol(factorTb))) {
-#   if (nlevels(factorTb[,i]) == 1 |
-#       (nlevels(factorTb[,i]) == 2 &
-#        any(is.na(levels(factorTb[,i]))))
-#       ) {
-#     single_fac_ind <- c(single_fac_ind, i)
-#   } else if (#nlevels(factorTb[,i]) == 3 &
-#              #any(is.na(levels(factorTb[,i]))) |
-# 
-#              (nlevels(factorTb[,i]) == 2 &
-#               !any(is.na(levels(factorTb[,i]))))
-#           ) {
-#     binary_fac_ind <- c(binary_fac_ind, i)
-#   } else {
-#     multi_fac_ind <- c(multi_fac_ind, i)
-#   }
-# }
-# 
-# new_factorTb <- factorTb[,multi_fac_ind]
-# binary_factor <- factorTb[,binary_fac_ind]
-# binary_factor <- binary_factor[-c(7,8)]
-# single_factor <- factorTb[,single_fac_ind]
 ```
 
 
-# F-statistic (ANOVA) for multi-level variables
+
+# Multi-level variables: F-statistic (ANOVA)
 This section goes through the following steps:     
     1. Calculate F-statistics between sample scores and categorical variables    
     2. Filter by p-value cutoff    
-    3. Plot heatmap of the F-stats results with significant p-value
+    3. Plot the heatmap of the F-stats results with significant p-value
     
 ## Calculate F-statistic (ANOVA) 
 ```{r}
@@ -135,6 +107,9 @@ heatmap(as.matrix(aov_coad_fvalue), main = 'COAD F-Statistics')
 dev.off()
 ```
 
+### Select the attribute for futher analysis
+Highlight the top `n` f-stats values among the ones that pass the p-value cutoff.
+
 ```{r}
 ## p-value cutoff
 aov_p_df <- aov_coad_pvalue < 0.05 
@@ -181,49 +156,9 @@ write.csv(aov_df_sig, "data/train_char_ftest_p_point05.csv")
 write.csv(factorTb_m_lv, "data/meta_train_char_multi.csv")
 ```
 
-```{r what_is_this_for?, echo=FALSE, eval=FALSE}
-# sig_fval <- as.data.frame(matrix(nrow = ncol(factorTb_m_lv),
-#                                  ncol = ncol(sampleScore_sub)))
-# 
-# rownames(sig_fval) <- colnames(factorTb_m_lv)
-# colnames(sig_fval) <- colnames(sampleScore_sub)
-# 
-# for (i in seq_len(ncol(sampleScore_sub))) {
-#   for (j in seq_len(ncol(factorTb_m_lv))) {
-#     
-#     if (!is.null(summary(aov(sampleScore_sub[, i] ~ factorTb_m_lv[, j]))[[1]]$`Pr(>F)`[1])) {
-#       
-#       if (!is.null(summary(aov(sampleScore_sub[, i] ~ factorTb_m_lv[, j]))[[1]]$`F value`[1]) &
-#           (summary(aov(sampleScore_sub[, i] ~ factorTb_m_lv[, j]))[[1]]$`Pr(>F)`[1] < 0.05)) {
-#         sig_fval[j, i] <- summary(aov(sampleScore_sub[, i] ~ factorTb_m_lv[, j]))[[1]]$`F value`[1]
-#       } else {
-#         next
-#       }
-#     } else {
-#       next
-#     }
-#   }
-# }
-# 
-# fstat_ind <- c()
-# 
-# for (i in seq_len(nrow(sig_fval))) {
-#   if (sum(is.na(sig_fval[i, ])) < 220) {
-#     fstat_ind <- c(fstat_ind, i)
-#   } else {
-#     next
-#   }
-# }
-# 
-# sig_fval <- sig_fval[fstat_ind,]
-# batch_char_ind_2 <- grep('analyte|portion|procurement|aliquot|uuid|barcode',
-#                   rownames(sig_fval))
-# sig_fval <- sig_fval[-batch_char_ind_2,]
-```
 
 
-# Calculate t-test for binary variables
-
+# Binary variables: t-test
 ## Remove attributes without enough observations
 ```{r}
 too_few_obs_ind <- c()
@@ -247,7 +182,6 @@ binary_factors <- factorTb_2_lv[,-too_few_obs_ind]
 ## Save the metadata table for binary variables converted into factors
 write.csv(binary_factors, "data/meta_train_char_binary.csv")
 ```
-
 
 ```{r}
 t_test_res <- as.data.frame(matrix(nrow = ncol(binary_factors),
@@ -294,7 +228,9 @@ heatmap(as.matrix(ttest_coad_tvalue_sig), main = 'COAD T-Test')
 dev.off()
 ```
 
-Subset t-test results with p-value cutoff
+### Select the attribute for futher analysis
+Highlight the top `n` t-test values among the ones that pass the p-value cutoff.
+
 ```{r}
 ## p-value cutoff
 ttest_p_df <- ttest_coad_pvalue < 0.05 
@@ -339,7 +275,9 @@ heatmap(as.matrix(t_df_sig))
 write.csv(t_df_sig, "data/train_char_ttest_p_point05.csv")
 ```
 
+#### Attribute names
 ```{r}
+## RAV834
 t_df_sig %>% filter(RAV834 == 1) %>% select(RAV834) %>% rownames()
 ```
 
@@ -349,27 +287,4 @@ t_df_sig %>% filter(RAV1008 == 1) %>% select(RAV1008) %>% rownames()
 
 ```{r}
 t_df_sig %>% filter(RAV1302 == 1) %>% select(RAV1302) %>% rownames()
-```
-
-
-
-
-```{r echo=FALSE, eval=FALSE}
-# # Only view t-values with significant p-value (<0.05)
-# ttest_coad_sig_tvalue <- t_test_res
-# 
-#  for (i in seq_len(ncol(sampleScore_sub))) {
-#    for (j in seq_len(ncol(binary_factors))) {
-#      if (t.test(sampleScore_sub[, i] ~ binary_factors[,j])$p.val < 0.05) {
-#        ttest_coad_sig_tvalue[j, i] <- t.test(sampleScore_sub[, i] ~ binary_factors[,j])$statistic
-#      }
-#    }
-#  }
-```
-
-```{r results='asis', message=FALSE}
-options(ztable.type='html')
-ztable(t_df_sig) %>%
-  makeHeatmap(palette = 'Blues') %>%
-  print(caption = 'T-test with p-values < 0.05')
 ```

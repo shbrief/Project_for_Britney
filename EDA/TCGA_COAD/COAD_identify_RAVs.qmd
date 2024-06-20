@@ -1,0 +1,264 @@
+---
+title: 'Colon Adenocarcinoma (COAD) EDA: Identify RAVs with robust biological signal'
+author: "Sehyun Oh"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+format:
+    html:
+        fontsize: 14pxs
+        toc: true
+        top-depth: 3
+output: html_document
+---
+
+# Initial Setup
+## Load packages
+```{r packages, warning=FALSE, message=FALSE}
+suppressPackageStartupMessages({
+    library(tidyverse)
+    library(metafolio)
+})
+```
+
+## Load data
+```{r}
+## Sample scores for the train set (80% of the randomly selected COAD samples)
+## Only the top 15 validated RAVs
+sampleScore_sub <- read.csv("data/sampleScore_train.csv", row.names = 1) # 261 samples x 15 RAVs
+
+## Training set's metadata: character variables
+charTb <- read.csv("data/meta_train_char.csv", row.names = 1) # 261 samples x 182 metadata attributes (char)
+
+## All the metadata for training data with >10% completeness (for color)
+meta_train <- read.csv("data/meta_train_all.csv", row.names = 1) # 261 samples x 869 metadata attributes (>10% complete)
+
+## Convert character variables into the `factor` data type
+factorTb <- charTb
+factorTb[sapply(factorTb, is.character)] <- lapply(factorTb[sapply(factorTb, is.character)], factor)
+
+## Check the factor level
+nlevel <- sapply(factorTb, function(x) {
+    res <- levels(x) %>% na.omit
+    return(length(res))
+})
+
+factorTb_1_lv <- factorTb[nlevel == 1]
+factorTb_2_lv <- factorTb[nlevel == 2]
+factorTb_m_lv <- factorTb[nlevel > 2]
+```
+
+## Load analysis results
+```{r}
+t_df_sig <- read.csv("data/train_char_ttest_p_point05.csv", row.names = 1)
+aov_df_sig <- read.csv("data/train_char_ftest_p_point05.csv", row.names = 1)
+binary_factors <- read.csv("data/meta_train_char_binary.csv", row.names = 1)
+```
+
+# Plot
+## Violin plot for categorical variables
+```{r}
+.gss_plot_data <- function(ravNum, attrName, meta, sampleScore) {
+    
+    if (!attrName %in% colnames(meta)) {
+        msg <- "The requested attribute doesn't exist in the sampleScore table."
+        stop(msg)
+    }
+    ravName <- paste0("RAV", ravNum)
+    ss <- sampleScore[ravName]
+    rownames(ss) <- gsub("\\.", "-", rownames(ss))
+    
+    df <- merge(ss, meta, by = "row.names", all.x = TRUE) %>%
+        select(ravName, attrName) %>%
+        filter(!is.na(.data[[attrName]]))
+    
+    return(df)
+}
+
+#' Make a violin plot for binary variable analysis results
+#' 
+#' @import ggplot2
+#' 
+#' @param ravNum An integer (1).
+#' @param attrName A character (1).
+#' @param meta A data frame with metadata information. Rows are samples and 
+#' columns are attributes. The `attrName` should be a part of column names.
+#' @param sampleScore A data frame. Rows are samples and columns are RAVs.
+#' 
+#' @examples
+#' gss_box_plot(ravNum = 1008, 
+#'              attrName = "patient.microsatellite_instability",
+#'              meta = binary_factors, 
+#'              sampleScore = sampleScore_sub)
+#' 
+gss_boxplot <- function(ravNum, attrName, meta, sampleScore) {
+    
+    df <- .gss_plot_data(ravNum, attrName, meta, sampleScore)
+    ravName <- paste0("RAV", ravNum)
+    
+    # Boxplot with jitter
+    p <- df %>% ggplot(aes(x = .data[[ravName]], y = .data[[attrName]])) +
+        geom_boxplot() +
+        geom_jitter() +
+        coord_flip()
+    
+    print(p)
+}
+
+gss_violin_plot <- function(ravNum, attrName, meta, sampleScore) {
+    
+    df <- .gss_plot_data(ravNum, attrName, meta, sampleScore)
+    ravName <- paste0("RAV", ravNum)
+
+    # Violin plot
+    p <- ggplot(df, aes(x = .data[[ravName]], y = .data[[attrName]])) +
+        geom_violin(trim = FALSE) +
+        coord_flip() # Rotate the violin plot
+
+    print(p)
+}
+```
+
+```{r test, echo=FALSE, eval=FALSE}
+library(ggsignif)
+ravName <- "RAV1302"
+attrName <- "patient.bcr_canonical_check.bcr_patient_canonical_reasons.bcr_canonical_reason.2"
+
+var_ls <- unique(df[[attrName]])
+ggplot(df, aes(x = .data[[ravName]], y = .data[[attrName]])) +
+        geom_boxplot() +
+        geom_jitter() +
+        coord_flip() +
+    geom_signif(comparisons = var_ls, 
+                map_signif_level = TRUE, test = "t.test")
+
+df[ravName, attrName]
+```
+
+```{r}
+attrNames <- t_df_sig %>% filter(RAV834 == 1) %>% select(RAV834) %>% rownames()
+
+for (i in seq_along(attrNames)) {
+    gss_boxplot(ravNum = 834, 
+                attrName = attrNames[i],
+                meta = binary_factors, 
+                sampleScore = sampleScore_sub)
+}
+```
+
+```{r}
+attrNames <- t_df_sig %>% filter(RAV1008 == 1) %>% select(RAV1008) %>% rownames()
+
+for (i in seq_along(attrNames)) {
+    gss_boxplot(ravNum = 1008, 
+                attrName = attrNames[i],
+                meta = binary_factors, 
+                sampleScore = sampleScore_sub)
+}
+```
+
+```{r}
+attrNames <- t_df_sig %>% filter(RAV1302 == 1) %>% select(RAV1302) %>% rownames()
+
+for (i in seq_along(attrNames)) {
+    gss_boxplot(ravNum = 1302, 
+                attrName = attrNames[i],
+                meta = binary_factors, 
+                sampleScore = sampleScore_sub)
+}
+```
+
+```{r}
+gss_boxplot(ravNum = 61, 
+            attrName = "pathology_T_stage",
+            meta = factorTb_m_lv, 
+            sampleScore = sampleScore_sub)
+```
+
+
+```{r}
+gss_boxplot(ravNum = 1302, 
+            attrName = "MSI_status",
+            meta = factorTb_m_lv, 
+            sampleScore = sampleScore_sub)
+```
+
+
+
+## Scatter plot for categorical variables
+```{r}
+#' Make the scatter plot of sampleScores for the chosen attribute
+#' 
+#' @param rav1 Integer(1). RAV to be plotted on x-axis.
+#' @param rav2 Integer(1). RAV to be plotted on y-axis.
+#' @param dat A data frame containing both metadata and sample scores. Rows
+#' are samples. The `attrName` input should be in the column.
+#' @param attrName Character(1). The name of the attribute to color-label.
+#' @param legend Character(1). Plot legend title. If not provided (default),
+#' the `attrName` is used.
+#'
+#' @examples
+#' gss_scatter_plot(832, 834, factorTb, sampleScore_sub,
+#'                  attrName = "pathology_N_stage")
+#' 
+gss_scatter_plot <- function(rav1, 
+                             rav2, 
+                             dat,
+                             attrName,
+                             legend = NA) {
+    
+    rav1Name <- paste0("RAV", rav1)
+    rav2Name <- paste0("RAV", rav2)
+    
+    ss <- df[, c(rav1Name, rav2Name)]
+    rownames(ss) <- gsub("\\.", "-", rownames(ss)) # reformat sample names in the sample score table
+    df <- df %>% filter(!is.na(.[[attrName]]))
+    
+    scaleType <- scale_type(df[[attrName]])
+    
+    if (is.na(legend)) {legend <- attrName}
+
+    p <- df %>% 
+        ggplot(aes(x = .data[[rav1Name]], 
+                   y = .data[[rav2Name]], 
+                   color = .data[[attrName]])) +
+        geom_point() +
+        theme_bw() +
+        theme(panel.grid.major = element_blank(),
+              panel.grid.minor = element_blank()) +
+        geom_hline(yintercept = 0, linetype = 'dashed') +
+        geom_vline(xintercept = 0, linetype = 'dashed') +
+        xlab(rav1Name) + ylab(rav2Name)
+    
+    if (scaleType == "continuous") {
+        p_colored <- p + 
+            scale_color_continuous(type = "viridis", name = legend)
+    } else {
+        colors <- gg_color_hue(length(unique(df[[attrName]])))
+        p_colored <- p + scale_color_manual(values = colors, name = legend)
+    }
+    
+    print(p_colored)
+}
+```
+
+Test different cases
+```{r}
+df_all <- merge(meta_train, sampleScore_sub, by = "row.names")
+
+colnames(meta_train)[grep("cea", colnames(meta_train), TRUE)]
+colnames(meta_train)[grep("ca", colnames(meta_train), TRUE)]
+
+df <- df_all %>% filter(patient.preoperative_pretreatment_cea_level < 50)
+cea_col <- "patient.preoperative_pretreatment_cea_level"
+gss_scatter_plot(220, 579, df, attrName = "patient.braf_gene_analysis_performed")
+
+plot(df$RAV220, df[[cea_col]])
+```
+
+```{r}
+attrNames <- colnames(factorTb)[grep("stage", colnames(factorTb), TRUE)]
+for (attrName in attrNames) {
+    gss_scatter_plot(220, 579, df, attrName = attrName)
+}
+```
+
+
