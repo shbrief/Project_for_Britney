@@ -34,14 +34,14 @@ suppressPackageStartupMessages({
 ```{r message=FALSE, warning=FALSE}
 RAVmodel <- getModel('C2', load=TRUE)
 ```
+
 ## TCGA-COAD RNAseq data
-### From GSEABenchmarkeR
-```{r eval=FALSE}
-# Raw read counts from GSE62944 from ExperimentHub
+```{r from_GSEABenchmarkeR, echo=FALSE, eval=FALSE}
+## Raw read counts from GSE62944 from ExperimentHub
 tcga <- GSEABenchmarkeR::loadEData("tcga",
-                                   cache = FALSE,
-                                   paired = FALSE,
-                                   map2entrez = FALSE)
+                                    cache = FALSE,
+                                    paired = FALSE,
+                                    map2entrez = FALSE)
 assay(tcga$COAD) <- log2(assay(tcga$COAD) + 1)
 tcga_coad <- tcga$COAD # 524 samples
 save(tcga_coad, file = "inst/extdata/TCGA_COAD_validationDatase.rda")
@@ -58,17 +58,11 @@ coad_rna <- getWithColData(coad,
                            'COAD_RNASeq2Gene-20160128',
                            mode = 'append')
 coad_meta <- colData(coad_rna)
+assay(coad_rna) <- log2(assay(coad_rna) + 1)
 ```
 
 # heatmapTable: COAD
 ```{r message=FALSE}
-validate_coad <- validate(tcga_coad, RAVmodel)
-heatmapTable(validate_coad, RAVmodel)
-```
-
-```{r message=FALSE}
-assay(coad_rna) <- log2(assay(coad_rna) + 1)
-
 validate_coad_rna <- validate(coad_rna, RAVmodel)
 heatmapTable(validate_coad_rna, RAVmodel)
 ```
@@ -104,8 +98,21 @@ meta_sub2 <- meta_sub1[random_sample_ind,]
 # Check for data types in listData
 unique(sapply(coad_meta@listData, type))
 
+meta_sub1$patient.number_of_abnormal_loci <- as.character(meta_sub1$patient.number_of_abnormal_loci)
+
 charcTb <- meta_sub2[, sapply(meta_sub1, class) == 'character']
 numTb <- meta_sub2[, sapply(meta_sub1, class) %in% c('numeric', 'integer')]
+
+# Sort numeric variables that have <=5 unique values as character variables
+addToFactors <- c()
+for (i in 1:length(numTb)) {
+  if (length(table(numTb[i])) <= 5) {
+    addToFactors <- c(addToFactors, i)
+  }
+}
+
+charcTb <- c(charcTb, numTb[addToFactors])
+numTb <- numTb[-addToFactors]
 ```
 
 ```{r}
@@ -166,8 +173,9 @@ z %>% makeHeatmap(palette="Blues")
 ```
 
 ```{r}
-heatmap(as.matrix(target_rsq), scale="column")
+# heatmap(as.matrix(target_rsq), scale="column")
 ```
+
 # Separate out Factor Variables by number of levels (1, 2, 3+) not including NA
 ```{r}
 # Convert to factor data type
@@ -203,7 +211,7 @@ for (i in 1:length(factorTb)) {
 
 new_factorTb <- factorTb[,multi_fac_ind]
 binary_factor <- factorTb[,binary_fac_ind]
-binary_factor <- binary_factor[-c(7,8)]
+#binary_factor <- binary_factor[-c(7,8)]
 single_factor <- factorTb[,single_fac_ind]
 ```
 
@@ -298,9 +306,9 @@ sig_fval <- sig_fval[-batch_char_ind_2,]
 
 ```{r results='asis', message=FALSE}
 options(ztable.type='html')
-#ztable(sig_fval) %>%
- # makeHeatmap(palette = 'Blues') #%>%
-  #print(caption='ANOVA F-stats with p-values < 0.01')
+ztable(sig_fval) %>%
+makeHeatmap(palette = 'Blues') %>%
+print(caption='ANOVA F-stats with p-values < 0.01')
 ```
 
 # Calculate t-test for binomial Character Variables
@@ -316,7 +324,7 @@ for (i in seq_len(ncol(binary_factor))) {
   }
 }
 
-bin_fac <- binary_factor[,-c(5, 12, 26)]
+bin_fac <- binary_factor[,-c(5, 14, 28)]
 
 t_test_res <- as.data.frame(matrix(nrow = ncol(bin_fac),
                                 ncol = ncol(sampleScore_sub)))
@@ -397,6 +405,7 @@ graph_categorical <- function(a, b, c, d = 'Legend') {
 
   plot_data <- data.frame(plot_data, new_factorTb)
   plot_data_2 <- plot_data[which(!is.na(factor(plot_data[[c]]))),]
+  #plot_data_2 <- plot_data[-which(is.na(factor(plot_data[[c]]))),]
 
   colors <- gg_color_hue(length(unique(plot_data_2[[c]])))
   colors.toplot <- c(colors)
@@ -421,17 +430,23 @@ print(pA)
 ```{r warning=FALSE}
 graph_categorical(834, 833, 'pathology_M_stage', 'Pathology M Stage')
 ```
-```{r warning=FALSE}
-graph_categorical(834, 1302, 'patient.microsatellite_instability_test_results.microsatellite_instability_test_result.mononucleotide_and_dinucleotide_marker_panel_analysis_status', 'Microsatellite')
-```
 
 ```{r warning=FALSE}
-graph_categorical(834, 517, 'patient.microsatellite_instability', new_factorTb, 'Microsatellite Instability')
+graph_categorical(834, 833, 'patient.microsatellite_instability', 'MSI')
 ```
 
 
 ```{r warning=FALSE}
-graph_categorical(832, 833, 'race', new_factorTb, 'Race')
+graph_categorical(832, 1166, 'race', 'Race')
+graph_categorical(832, 1166, 'patient.bcr_canonical_check.bcr_patient_canonical_reasons.bcr_canonical_reason', 'BCR')
 ```
 
+```{r warning=FALSE}
+graph_categorical(832, 1302, 'lymphatic_invasion_present', 'Lymphatic Invasion')
+```
 
+```{r fig.width= 8, fig.height=8}
+ind <- 834
+findStudiesInCluster(RAVmodel, ind, studyTitle = TRUE)
+drawWordcloud(RAVmodel, ind)
+```
