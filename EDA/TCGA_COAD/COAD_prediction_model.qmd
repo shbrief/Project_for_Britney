@@ -43,29 +43,76 @@ source("R/evaluateRFmodel.R")
 ```
 
 # Prediction models
-## Random Forest classification model
+## Use top 15 validated RAVs for TCGA-COAD
 ```{r}
-validated_RAVs <- c("RAV188", "RAV832", "RAV579", "RAV1166", "RAV220")
-# target_attr <- "patient.lymphatic_invasion"
-# target_RAVs <- c("RAV220", "RAV833", "RAV1575", validated_RAVs) %>% unique
-target_attr <- "patient.bcr_canonical_check.bcr_patient_canonical_status"
-target_RAVs <- c("RAV1302", "RAV517", validated_RAVs) %>% unique
-# target_attr <- "pathologic_stage"
-# target_RAVs <- c("RAV832", "RAV61", "RAV834")
+validated_RAVs <- c("RAV61", "RAV188", "RAV192", "RAV220", "RAV324", 
+                    "RAV517", "RAV579", "RAV832", "RAV833", "RAV834", 
+                    "RAV868", "RAV1008", "RAV1166", "RAV1302", "RAV1575")
+target_attr <- "patient.microsatellite_instability"
 
 labels <- factorTb[[target_attr]]
 nonNALabels <- which(!is.na(labels))
-data <- sampleScore_sub[,target_RAVs]
+data <- sampleScore_sub[,validated_RAVs]
 
 train_data <- data[nonNALabels,]
 train_labels <- labels[nonNALabels]
-
-set.seed(1234)
-evaluateRFmodel(data = t(train_data), labels = train_labels)
 ```
 
-Single RAV model
+## Random Forest classification model
 ```{r}
-evaluateRFmodel(data = t(train_data)[1,,drop=FALSE], labels = train_labels)
+set.seed(1234)
+evaluateRFmodel(data = t(train_data), labels = train_labels, aucOnly = TRUE)
+```
+
+# Single RAV
+```{r}
+## Only RA834
+dat <- t(train_data)["RAV832",,drop=FALSE]
+set.seed(1234)
+evaluateRFmodel(data = dat, labels = train_labels, aucOnly = TRUE)
+```
+
+
+# Iterate
+```{r}
+library(caret)
+library(pROC)
+library(combinat)  # For combination generation
+
+## All 15 validated RAVs
+all_vars <- validated_RAVs
+
+## Create the summary table
+source("R/leaveOneSummary.R")
+set.seed(1234)
+summary_table1 <- leaveOneSummary(t(train_data), train_labels, all_vars)
+summary_table1
+
+## Write the summary table to a CSV file
+fname <- paste0("combination_of_", length(all_vars)-1,"_summary.csv")
+write.csv(summary_table1, 
+          file.path("data/RF_res", fname), 
+          row.names = FALSE)
+```
+
+```{r}
+ggplot(summary_table, aes(as.factor(Removed_Variable), Mean_AUC)) + 
+    geom_point() + 
+    labs(y = "Mean AUC", x = "Removed RAV")
+```
+
+```{r}
+remove_RAV <- summary_table$Removed_Variable[which.min(summary_table$Mean_AUC)]
+train_data_sub <- train_data %>% select(!remove_RAV)
+
+set.seed(1234)
+summary_table_2 <- leaveOneSummary(t(train_data_sub), train_labels, 
+                                 all_vars[all_vars != remove_RAV])
+summary_table_2
+
+## Write the summary table to a CSV file
+write.csv(summary_table_2, 
+          "data/RF_res/combination_of_13_summary.csv", 
+          row.names = FALSE)
 ```
 
