@@ -435,7 +435,6 @@ graph_categorical(834, 833, 'pathology_M_stage', 'Pathology M Stage')
 graph_categorical(834, 833, 'patient.microsatellite_instability', 'MSI')
 ```
 
-
 ```{r warning=FALSE}
 graph_categorical(832, 1166, 'race', 'Race')
 graph_categorical(832, 1166, 'patient.bcr_canonical_check.bcr_patient_canonical_reasons.bcr_canonical_reason', 'BCR')

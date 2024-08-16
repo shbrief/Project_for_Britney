@@ -341,10 +341,10 @@ pA <- ggplot(plot_data_2,
 print(pA)
 ```
 ```{r}
-sampleScore1 <- 4689
-sampleScore2 <- 1959
+sampleScore1 <- 1001
+sampleScore2 <- 1002
 
-plot_data <- sampleScore_sub[, c("RAV4689", "RAV1959")]
+plot_data <- sampleScore_sub[, c("RAV1001", "RAV1002")]
 colnames(plot_data)[1] <- "sampleScore1"
 colnames(plot_data)[2] <- "sampleScore2"
 
@@ -370,12 +370,8 @@ pA <- ggplot(plot_data,
 print(pA)
 ```
 ```{r}
-
-sampleScore1 <- 4689
-sampleScore2 <- 1959
-
-t.test(sampleScore1 ~ patient.gender, data = plot_data)
 t.test(sampleScore2 ~ patient.gender, data = plot_data)
+t.test(sampleScore1 ~ patient.gender, data = plot_data)
 ```
 
 
@@ -404,23 +400,27 @@ estimate_plot
 
 ## RAV Exploration
 ```{r}
-indices <- c(1001, 4113)
-
-rav_exploration <- function(indices) {
-  for (x in 1:length(indices)) {
-    print(findStudiesInCluster(RAVmodel, indices[x], studyTitle = TRUE))
-    drawWordcloud(RAVmodel, indices[x])
-  }
-}
-
-rav_exploration(indices)
-
+ind <- 1001
+findStudiesInCluster(RAVmodel, ind, studyTitle = TRUE)
+drawWordcloud(RAVmodel, ind)
 ```
+
+```{r}
+ind <- 4113
+findStudiesInCluster(RAVmodel, ind, studyTitle = TRUE)
+drawWordcloud(RAVmodel, ind)
+```
+
+
+```{r}
+paste0('RAV',sampleScore1)
+```
+
 
 ```{r}
 # Function to Display Categorical Attributes' Score Plots
 
-graph_categorical <- function(a, b, c, d = 'Legend') {
+graph_categorical <- function(a, b, c) {
   sampleScore1 <- paste0('RAV', a)
   sampleScore2 <- paste0('RAV', b)
   
@@ -429,17 +429,16 @@ graph_categorical <- function(a, b, c, d = 'Legend') {
   colnames(plot_data)[2] <- "sampleScore2"
   
   plot_data <- data.frame(plot_data, new_factorTb)
-  plot_data_2 <- plot_data[-which(is.na(factor(plot_data[[c]]))),]
   
-  colors <- gg_color_hue(length(unique(plot_data_2[[c]])))
+  colors <- gg_color_hue(length(unique(c)) - 1)
   colors.toplot <- c(colors)
 
-  pA <- ggplot(plot_data_2,
-             aes(x = sampleScore1, y = sampleScore2, color = plot_data_2[[c]]
+  pA <- ggplot(plot_data,
+             aes(x = sampleScore1, y = sampleScore2, color = c
                  )) +
         geom_point() +
         #ggtitle('Score Plot for Gender') +
-        scale_color_manual(values = colors.toplot, name = d) +
+        #scale_color_manual(values = colors.toplot, name = "Gender") +
         theme_bw() +
         theme(panel.grid.major = element_blank(),
         panel.grid.minor = element_blank()) +
@@ -449,12 +448,9 @@ graph_categorical <- function(a, b, c, d = 'Legend') {
 
 print(pA)
 }
-```
 
-```{r warning=FALSE}
-graph_categorical(2673, 998, 'pathology_N_stage', 'Pathology N Stage')
-graph_categorical(998, 1959, 'patient.primary_lymph_node_presentation_assessment')
-graph_categorical(1125, 3033, 'patient.drugs.drug.2.therapy_types.therapy_type')
+graph_categorical(2673, 998, plot_data$pathology_N_stage)
+graph_categorical(998, 1959, plot_data$patient.primary_lymph_node_presentation_assessment)
+graph_categorical(1125, 3033, plot_data$patient.drugs.drug.2.therapy_types.therapy_type)
 ```
-
 

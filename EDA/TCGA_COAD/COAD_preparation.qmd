@@ -98,12 +98,26 @@ meta_train <- meta_non_sparse[train_sample_ind,] # 261 samples x 869 metadata at
 coad_train <- coad_rna[, train_sample_ind] # 20,501 genes x 261 samples
 ```
 
+```{r echo=FALSE, eval=FALSE} 
+coad_train_se <- coad_rna[, train_sample_ind]
+coad_test_se <- coad_rna[, -train_sample_ind]
+saveRDS(coad_train_se, "data/coad_train.rds")
+saveRDS(coad_test_se, "data/coad_test.rds")
+```
+
 Remove batch effect variables from metadata table
 ```{r}
 batch_var <- "analyte|portion|procurement|aliquot|uuid|barcode"
 batch_ind <- grep(batch_var, colnames(meta_train))
 meta_train <- meta_train[,-batch_ind] # 261 samples x 290 metadata attributes
 ```
+
+## Test set
+```{r}
+meta_test <- meta_non_sparse[train_sample_ind,] # 261 samples x 869 metadata attributes
+coad_test <- coad_rna[, train_sample_ind] # 20,501 genes x 261 samples
+```
+
 
 ## Based on variable types
 ```{r}
@@ -122,6 +136,7 @@ numTb <- meta_train[, sapply(var_type, class) %in% c('numeric', 'integer')] # 26
 ```{r}
 ## Calculate validation scores
 sampleScore <- calculateScore(coad_train, RAVmodel)
+rownames(sampleScore) <- gsub("\\.", "-", rownames(sampleScore))
 ```
 
 Samlple scores only for the validated RAVs

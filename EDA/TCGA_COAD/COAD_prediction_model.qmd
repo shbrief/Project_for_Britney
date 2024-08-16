@@ -33,135 +33,91 @@ charTb <- read.csv("data/meta_train_char.csv", row.names = 1) # 261 samples x 18
 meta_train <- read.csv("data/meta_train_all.csv", row.names = 1) # 261 samples x 869 metadata attributes (>10% complete)
 
 ## Convert character variables into the `factor` data type
+
+#factorTb <- charTb
+
 factorTb <- meta_train
+
 factorTb[sapply(factorTb, is.character)] <- lapply(factorTb[sapply(factorTb, is.character)], factor)
 ```
 
 ## Custom functions
 ```{r}
-#' Function to preprocess data
-#' 
-#' @param data A matrix with taxa (row) and samples (column), stored in the 
-#' assay slot of the TreeSummarizedExperiment object.
-#' @param min Integer(1). The minimum number of samples detecting the feature.
-#' Default is 0.
-#' 
-preprocess_data <- function(data, min = 0) {
-  keep_features <- rowSums(data > 0) >= min
-  data <- data[keep_features, ]
-  return(data)
-}
-
-#' Evaluate Random Forest classification model using ROC curve
-#' 
-#' @import caret
-#' @import pROC
-#' 
-#' @param data A matrix with taxa (row) and samples (column), stored in the 
-#' assay slot of the TreeSummarizedExperiment object.
-#' @param labels A vector of outcomes. The number of samples and the length of 
-#' labels should be same.
-#' @param min Integer(1). The minimum number of samples detecting the feature.
-#' Default is 0.
-#' @param p The percentage of data that goes to training. Between 0 and 1. Default is 0.8.
-#' @param aucOnly If `TRUE`, this function returns only the AUC. 
-#' 
-#' @examples
-#' se <- curated_cmd |>
-#'     filter(study_name == "HanniganGD_2017") |>
-#'     filter(disease %in% c("Healthy", "Colorectal Carcinoma")) |>
-#'     select(where(~ !all(is.na(.x)))) |> 
-#'     returnSamples("relative_abundance", rownames = "short")
-#' 
-#' data <- assay(se)
-#' labels <- colData(se)$disease %>% factor
-#' evaluateRFmodel(data, labels)
-#' 
-evaluateRFmodel <- function(data, labels, p = 0.8, min = 0, aucOnly = FALSE) {
-    
-    ## Sanity check
-    if (ncol(data) != length(labels)) {
-        msg <- "The number of samples and the length of labels are different."
-        stop(msg)
-    }
-    
-    ## Preprocess data
-    data <- preprocess_data(data, min = min)
-  
-    ## Split data into training and test sets
-    train_index <- createDataPartition(labels, p = p, list = FALSE)
-    train_data <- data[,train_index] |> t()
-    train_labels <- labels[train_index]
-    test_data <- data[,-train_index] |> t()
-    test_labels <- labels[-train_index]
-  
-    ## Binary or Multinomial Logit
-    lvs <- levels(train_labels)
-    nlvs <- nlevels(train_labels)
-    if (nlvs == 2) {
-        train_metric <- "Accuracy"
-    } else if (nlvs > 2) {
-        train_metric <- "MultinomialLogitMetric"
-    }
-    
-    ## Train random forest model with nested cross-validation
-    rf_model <- train(
-        train_data, train_labels,
-        method = "rf", # random forest
-        metric = train_metric,
-        trControl = trainControl(
-            method = "repeatedcv", # repeating cross-validation
-            number = 5, # number of re-sampling iterations
-            repeats = 5,
-            search = "random"),
-        tuneLength = 20
-    )
-  
-    ## Evaluate model performance on test set
-    predictions <- predict(rf_model, newdata = test_data, type = "prob")
-    
-    ## Generate ROC curve
-    if (nlvs == 2) {
-        roc_obj <- roc(response = factor(test_labels, levels = lvs),
-                       predictor = predictions[, 2],
-                       levels = rev(lvs))
-        if (isTRUE(aucOnly)) {
-            return(roc_obj$auc)
-        } else {
-            plot(roc_obj, print.auc = TRUE, main = "ROC Curve") # plot ROC curve
-        }
-    } else {
-        roc_obj <- multiclass.roc(response = factor(test_labels, levels = lvs),
-                                  predictor = predictions)
-        if (isFALSE(aucOnly)) {
-            msg <- "A multiclass AUC is a mean of several auc and cannot be plotted."
-            message(msg)
-        }
-        return(roc_obj$auc)
-    }
-}
+source("R/evaluateRFmodel.R")
 ```
 
 # Prediction models
-## Random Forest classification model
+## Use top 15 validated RAVs for TCGA-COAD
 ```{r}
-validated_RAVs <- c("RAV188", "RAV832", "RAV579", "RAV1166", "RAV220")
-# target_attr <- "patient.lymphatic_invasion"
-# target_RAVs <- c("RAV220", "RAV833", "RAV1575", validated_RAVs) %>% unique
-target_attr <- "patient.bcr_canonical_check.bcr_patient_canonical_status"
-target_RAVs <- c("RAV1302", "RAV517", validated_RAVs) %>% unique
-# target_attr <- "pathologic_stage"
-# target_RAVs <- c("RAV832", "RAV61", "RAV834")
+validated_RAVs <- c("RAV61", "RAV188", "RAV192", "RAV220", "RAV324", 
+                    "RAV517", "RAV579", "RAV832", "RAV833", "RAV834", 
+                    "RAV868", "RAV1008", "RAV1166", "RAV1302", "RAV1575")
+target_attr <- "patient.microsatellite_instability"
 
 labels <- factorTb[[target_attr]]
 nonNALabels <- which(!is.na(labels))
-data <- sampleScore_sub[,target_RAVs]
+data <- sampleScore_sub[,validated_RAVs]
 
 train_data <- data[nonNALabels,]
 train_labels <- labels[nonNALabels]
+```
+
+## Random Forest classification model
+```{r}
+set.seed(1234)
+evaluateRFmodel(data = t(train_data), labels = train_labels, aucOnly = TRUE)
+```
+
+# Single RAV
+```{r}
+## Only RA834
+dat <- t(train_data)["RAV832",,drop=FALSE]
+set.seed(1234)
+evaluateRFmodel(data = dat, labels = train_labels, aucOnly = TRUE)
+```
+
+
+# Iterate
+```{r}
+library(caret)
+library(pROC)
+library(combinat)  # For combination generation
+
+## All 15 validated RAVs
+all_vars <- validated_RAVs
+
+## Create the summary table
+source("R/leaveOneSummary.R")
+set.seed(1234)
+summary_table1 <- leaveOneSummary(t(train_data), train_labels, all_vars)
+summary_table1
+
+## Write the summary table to a CSV file
+fname <- paste0("combination_of_", length(all_vars)-1,"_summary.csv")
+write.csv(summary_table1, 
+          file.path("data/RF_res", fname), 
+          row.names = FALSE)
+```
+
+```{r}
+ggplot(summary_table, aes(as.factor(Removed_Variable), Mean_AUC)) + 
+    geom_point() + 
+    labs(y = "Mean AUC", x = "Removed RAV")
+```
+
+```{r}
+remove_RAV <- summary_table$Removed_Variable[which.min(summary_table$Mean_AUC)]
+train_data_sub <- train_data %>% select(!remove_RAV)
 
 set.seed(1234)
-evaluateRFmodel(data = t(train_data), labels = train_labels)
+summary_table_2 <- leaveOneSummary(t(train_data_sub), train_labels, 
+                                 all_vars[all_vars != remove_RAV])
+summary_table_2
+
+## Write the summary table to a CSV file
+write.csv(summary_table_2, 
+          "data/RF_res/combination_of_13_summary.csv", 
+          row.names = FALSE)
 ```
 
 ```{r}
