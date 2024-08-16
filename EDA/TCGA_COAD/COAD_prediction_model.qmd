@@ -33,7 +33,11 @@ charTb <- read.csv("data/meta_train_char.csv", row.names = 1) # 261 samples x 18
 meta_train <- read.csv("data/meta_train_all.csv", row.names = 1) # 261 samples x 869 metadata attributes (>10% complete)
 
 ## Convert character variables into the `factor` data type
-factorTb <- charTb
+
+#factorTb <- charTb
+
+factorTb <- meta_train
+
 factorTb[sapply(factorTb, is.character)] <- lapply(factorTb[sapply(factorTb, is.character)], factor)
 ```
 
@@ -116,3 +120,101 @@ write.csv(summary_table_2,
           row.names = FALSE)
 ```
 
+```{r}
+# validated_RAVs <- c("RAV188", "RAV832", "RAV579", "RAV1166", "RAV220")
+validated_RAVs <- c("RAV61", "RAV188", "RAV192", "RAV220", "RAV324", "RAV517", "RAV579", "RAV832", "RAV833", "RAV834", "RAV868", "RAV1008", "RAV1166", "RAV1302", "RAV1575")
+# target_attr <- "patient.lymphatic_invasion"
+# target_RAVs <- c("RAV220", "RAV833", "RAV1575", validated_RAVs) %>% unique
+#target_attr <- "patient.bcr_canonical_check.bcr_patient_canonical_status"
+target_attr <- "patient.microsatellite_instability"
+target_RAVs <- c(validated_RAVs) %>% unique
+# target_attr <- "pathologic_stage"
+# target_RAVs <- c("RAV832", "RAV61", "RAV834")
+  
+
+validated_RAVs <- c("RAV61", "RAV188", "RAV192", "RAV220", "RAV324", "RAV517", "RAV579", "RAV832", "RAV833", "RAV834", "RAV868", "RAV1008", "RAV1166", "RAV1302", "RAV1575")
+target_attr <- "patient.microsatellite_instability"
+
+labels <- factorTb[[target_attr]]
+nonNALabels <- which(!is.na(labels))
+data <- sampleScore_sub[,validated_RAVs]
+
+train_data <- data[nonNALabels,]
+train_labels <- labels[nonNALabels]
+
+set.seed(1234)
+evaluateRFmodel(data = t(train_data), labels = train_labels)
+```
+```{r}
+validated_RAVs <- c("RAV61", "RAV188", "RAV192", "RAV220", "RAV324", "RAV517", "RAV579", "RAV832", "RAV833", "RAV834", "RAV868", "RAV1008", "RAV1166", "RAV1302", "RAV1575")
+target_attr <- "patient.microsatellite_instability"
+
+labels <- factorTb[[target_attr]]
+nonNALabels <- which(!is.na(labels))
+data <- sampleScore_sub[,validated_RAVs]
+
+train_data <- data[nonNALabels,]
+train_labels <- labels[nonNALabels]
+
+set.seed(1234)
+evaluateRFmodel(data = t(train_data), labels = train_labels)
+```
+
+```{r}
+validated_RAVs <- c("RAV61", "RAV188", "RAV192", "RAV220", "RAV324", "RAV517", "RAV579", "RAV832", "RAV833", "RAV834") #Removing RAVs 868, 1008, 1166, 1302, 1575 has no effect
+# Removing RAV834 lowered the score by 0.143 (AUC score: 0.857)
+target_attr <- "patient.microsatellite_instability"
+
+labels <- factorTb[[target_attr]]
+nonNALabels <- which(!is.na(labels))
+data <- sampleScore_sub[,validated_RAVs]
+
+train_data <- data[nonNALabels,]
+train_labels <- labels[nonNALabels]
+
+set.seed(1234)
+evaluateRFmodel(data = t(train_data), labels = train_labels)
+```
+```{r}
+validated_RAVs <- c("RAV192", "RAV1575") # Add on RAV832 AUC: 0.786, RAV833: 0.857, RAV834: 1.00
+
+target_attr <- "patient.microsatellite_instability"
+
+labels <- factorTb[[target_attr]]
+nonNALabels <- which(!is.na(labels))
+data <- sampleScore_sub[,validated_RAVs]
+
+train_data <- data[nonNALabels,]
+train_labels <- labels[nonNALabels]
+
+set.seed(1234)
+evaluateRFmodel(data = t(train_data), labels = train_labels)
+```
+```{r}
+validated_RAVs <- c("RAV61", "RAV188", "RAV192", "RAV220", "RAV324", "RAV517", "RAV579", "RAV832", "RAV833", "RAV868", "RAV1008", "RAV1166", "RAV1302", "RAV1575") #Removing only 834 lowers the score by 0.214 (AUC: 0.786)
+target_attr <- "patient.microsatellite_instability"
+
+labels <- factorTb[[target_attr]]
+nonNALabels <- which(!is.na(labels))
+data <- sampleScore_sub[,validated_RAVs]
+
+train_data <- data[nonNALabels,]
+train_labels <- labels[nonNALabels]
+
+set.seed(1234)
+evaluateRFmodel(data = t(train_data), labels = train_labels)
+```
+```{r}
+validated_RAVs <- c("RAV61", "RAV188", "RAV192", "RAV220", "RAV324", "RAV517", "RAV579", "RAV868", "RAV1008", "RAV1166", "RAV1302", "RAV1575") #Removing 832, 833, and 834 lowers the score by 0.357 (AUC: 0.643)
+target_attr <- "patient.microsatellite_instability"
+
+labels <- factorTb[[target_attr]]
+nonNALabels <- which(!is.na(labels))
+data <- sampleScore_sub[,validated_RAVs]
+
+train_data <- data[nonNALabels,]
+train_labels <- labels[nonNALabels]
+
+set.seed(1234)
+evaluateRFmodel(data = t(train_data), labels = train_labels)
+```

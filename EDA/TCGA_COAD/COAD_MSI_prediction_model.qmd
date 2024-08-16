@@ -135,7 +135,7 @@ set.seed(1234)
 evaluateRFmodel(data = t(train_data), labels = train_labels)
 ```
 ```{r}
-validated_RAVs <- c("RAV61", "RAV188", "RAV192", "RAV220", "RAV324", "RAV517", "RAV579", "RAV832", "RAV833", "RAV868", "RAV1008", "RAV1166", "RAV1302", "RAV1575") #Removing only 834 lowers the score by 0.214 (AUC: 0.786)
+validated_RAVs <- c("RAV192", "RAV324", "RAV517", "RAV579", "RAV868", "RAV1008", "RAV1302") #Removing only 834 lowers the score by 0.214 (AUC: 0.786)
 target_attr <- "patient.microsatellite_instability"
 
 labels <- factorTb[[target_attr]]
@@ -149,7 +149,8 @@ set.seed(1234)
 evaluateRFmodel(data = t(train_data), labels = train_labels)
 ```
 ```{r}
-validated_RAVs <- c("RAV61", "RAV188", "RAV192", "RAV220", "RAV324", "RAV517", "RAV579", "RAV868", "RAV1008", "RAV1166", "RAV1302", "RAV1575") #Removing 832, 833, and 834 lowers the score by 0.357 (AUC: 0.643)
+#Start here, 7/20/24
+validated_RAVs <- c("RAV324", "RAV517")
 target_attr <- "patient.microsatellite_instability"
 
 labels <- factorTb[[target_attr]]
@@ -160,7 +161,8 @@ train_data <- data[nonNALabels,]
 train_labels <- labels[nonNALabels]
 
 set.seed(1234)
-evaluateRFmodel(data = t(train_data), labels = train_labels)
+testing <- evaluateRFmodel(data = t(train_data), labels = train_labels)
+testing$auc
 ```
 
 ```{r}
@@ -268,23 +270,109 @@ set.seed(1234)
 evaluateRFmodel(data = t(train_data), labels = train_labels)
 ```
 
-```{r}
-#All 15 validated RAVs: 61, 188, 192, 220, 324, 517, 579, 832, 833, 834, 868, 1008, 1166, 1302, 1575
-#Remove RAVs 517, 220, 579, 832, 833, 834, 868, 1008, 1166, 1302, and 1575.
-
-validated_RAVs <- c("RAV61", "RAV188", "RAV192", "RAV324", "RAV1575")
+```{r Cycle through RAV function}
+# All 15 validated RAVs: 188, 832, 579, 1166, 220, 1302, 834, 1008, 324, 868, 1575, 61, 833, 517, 192
+validated_RAVs <- c("RAV188", "RAV832", "RAV579", "RAV1166", "RAV220", "RAV1302", "RAV1008", "RAV324", "RAV868", "RAV1575", "RAV61", "RAV833", "RAV517", "RAV192")
 target_attr <- "patient.microsatellite_instability"
 
-labels <- factorTb[[target_attr]]
-nonNALabels <- which(!is.na(labels))
-data <- sampleScore_sub[,validated_RAVs]
+# for (i in 1:length(validated_RAVs)) {
+#   validated_RAV <- validated_RAVs[-i]
+#   
+#   labels <- factorTb[[target_attr]]
+#   nonNALabels <- which(!is.na(labels))
+#   data <- sampleScore_sub[,validated_RAV]
+#   
+#   train_data <- data[nonNALabels,]
+#   train_labels <- labels[nonNALabels]
+#   
+#   set.seed(1234)
+#   RFmodel <- evaluateRFmodel(data = t(train_data), labels = train_labels)
+#   print(RFmodel$auc)
+# }
 
-train_data <- data[nonNALabels,]
-train_labels <- labels[nonNALabels]
 
-set.seed(1234)
-evaluateRFmodel(data = t(train_data), labels = train_labels)
+# We want to detect which RAVs can be removed and will actually increase the AUC score
+# To do this, remove RAV 834 to create your point of reference AUC
+# most_relevant_RAVs <- function(validated_RAVs, target_attr) {
+#   auc_843_removed <- 0.7857
+#   
+#   for (i in 1:length(validated_RAVs)) {
+#   validated_RAV <- validated_RAVs[-i]
+#   
+#   labels <- factorTb[[target_attr]]
+#   nonNALabels <- which(!is.na(labels))
+#   data <- sampleScore_sub[,validated_RAV]
+#   
+#   train_data <- data[nonNALabels,]
+#   train_labels <- labels[nonNALabels]
+#   set.seed(1234)
+#   RFmodel <- evaluateRFmodel(data = t(train_data), labels = train_labels)
+#   
+#   print(RFmodel$auc)
+#   print(validated_RAVs[i])
+#   
+#   if (RFmodel$auc > auc_843_removed) {
+#     auc_differential <- round(abs(RFmodel$auc - auc_843_removed))
+#     RAV_list <- c(RAV_list, validated_RAVs[i])
+#   } else if (RFmodel$auc == auc_843_removed) {
+#       RAV_list_2 <- c(RAV_list_2, validated_RAVs[i])
+#   } else {
+#       next
+#     }
+#   }
+# }
+# 
+# most_relevant_RAVs(validated_RAVs, target_attr)
 ```
 
+```{r}
+validated_RAVs <- c("RAV188", "RAV832", "RAV579", "RAV1166", "RAV220", "RAV1302", "RAV1008", "RAV324", "RAV868", "RAV1575", "RAV61", "RAV833", "RAV517", "RAV192")
+
+auc_df <- data.frame(matrix(ncol=14, nrow=3))
+colnames(auc_df) <- validated_RAVs
+
+auc_differential <- 0
+auc_start <- auc_834
+auc_834 <- 0.7857 #RAV 834 Removed
+index_store <- c(13)
+```
+
+```{r}
+
+validated_RAVs <- validated_RAVs[-index_store] 
+
+for (i in 1:length(validated_RAVs)) {
+  labels <- factorTb[[target_attr]]
+  nonNALabels <- which(!is.na(labels))
+  data <- sampleScore_sub[,validated_RAVs[-i]]
+  
+  train_data <- data[nonNALabels,]
+  train_labels <- labels[nonNALabels]
+ 
+  set.seed(1234)
+  RFmodel <- evaluateRFmodel(data = t(train_data), labels = train_labels)
+  
+  new_auc <- round(RFmodel$auc, 4)
+  auc_df[validated_RAVs[i]][3,] <- new_auc
+  
+  if (new_auc > auc_start) {
+    auc_placeholder <- abs(new_auc - auc_start)
+    if (auc_placeholder >= auc_differential) {
+      auc_differential <- auc_placeholder
+      index_store <- c(index_store, i)
+    }
+    
+  } else {
+    print("Lower")
+  }
+}
+```
+
+
+```{r}
+auc_df <- replace(auc_df, is.na(auc_df), 0)
+
+pheatmap::pheatmap(as.matrix(auc_df), treeheight_row = 0, treeheight_col = 0, display_numbers=TRUE, cluster_rows=FALSE, cluster_cols=FALSE, color=paletteer_c("ggthemes::Blue-Green Sequential", 20))
+```
 
 
